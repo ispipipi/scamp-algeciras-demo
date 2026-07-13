@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCAMP · Ship Care and Maintenance · Algeciras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* SCAMP brand — muestreado del logo del cliente (scampnetwork.com) */
+  --brand-gold:#fdc500;
+  --brand-gold-dark:#b98c00;
+  --navy-950:#04222d;
+  --navy-900:#073342;
+  --navy-800:#0b4356;
+  --blue-600:#00819e;
+  --blue-500:#2ba3c0;
+  --teal-600:#00819e;
+  --teal-700:#045f76;
+  --green-600:#1e8e5a;
+  --green-100:#e3f6ec;
+  --red-600:#c0392b;
+  --red-100:#fce9e7;
+  --amber-600:#c07a12;
+  --amber-100:#fbf0dd;
+  --ink-900:#101827;
+  --ink-700:#374255;
+  --ink-500:#64748b;
+  --ink-300:#c7d0dc;
+  --line:#e2e8f0;
+  --bg:#eef2f6;
+  --card:#ffffff;
+  --radius:10px;
+  --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans:'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--ink-900);
+  -webkit-font-smoothing:antialiased;
+}
+#app{display:flex;min-height:100vh;}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar{
+  width:236px;flex:0 0 236px;
+  background:linear-gradient(180deg,var(--navy-950),var(--navy-900));
+  color:#dce8f5;
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+}
+.brand{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+.brand .mark{display:flex;align-items:center;gap:10px;}
+.brand .mark svg{flex:0 0 30px;}
+.brand h1{font-size:19px;font-weight:800;letter-spacing:.5px;margin:0;color:#fff;}
+.brand p{margin:3px 0 0;font-size:11px;color:#8fa9c4;letter-spacing:.4px;}
+.port-switch{display:flex;gap:6px;margin-top:14px;}
+.port-pill{
+  flex:1;text-align:center;padding:6px 4px;border-radius:7px;font-size:11.5px;font-weight:600;
+  border:1px solid rgba(255,255,255,.14);color:#9fb7d0;cursor:pointer;letter-spacing:.2px;
+}
+.port-pill.active{background:var(--blue-600);color:#fff;border-color:var(--blue-600);}
+nav.mainnav{padding:14px 12px;flex:1;}
+.navitem{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:8px;
+  color:#a9c3d3;font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:3px;
+  border:1px solid transparent;border-left:3px solid transparent;position:relative;
+}
+.navitem .num{
+  font-family:var(--mono);font-size:10.5px;color:#4f7a8c;width:16px;
+}
+.navitem:hover{background:rgba(255,255,255,.05);color:#fff;}
+.navitem.active{background:rgba(0,129,158,.28);color:#fff;border-color:rgba(0,129,158,.4);border-left-color:var(--brand-gold);}
+.navitem.active .num{color:var(--brand-gold);}
+.sidebar-foot{padding:14px 20px 18px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:#5f7c9c;}
+
+/* ---------- MAIN ---------- */
+main.content{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  background:var(--card);border-bottom:1px solid var(--line);
+  padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:5;
+}
+.topbar h2{margin:0;font-size:18px;font-weight:800;}
+.topbar .eyebrow{font-family:var(--mono);font-size:10.5px;color:var(--blue-600);letter-spacing:.6px;font-weight:600;text-transform:uppercase;margin-bottom:2px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.clock{font-family:var(--mono);font-size:12px;color:var(--ink-500);}
+
+.view{padding:24px 28px 60px;}
+
+/* ---------- generic components ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);}
+.btn{
+  border:none;border-radius:7px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--teal-600);color:#fff;}
+.btn-primary:hover{background:var(--teal-700);}
+.btn-blue{background:var(--blue-600);color:#fff;}
+.btn-blue:hover{background:#2a629e;}
+.btn-ghost{background:#fff;color:var(--ink-700);border:1px solid var(--line);}
+.btn-ghost:hover{background:#f4f7fa;}
+.btn-danger{background:var(--red-600);color:#fff;}
+.btn-sm{padding:6px 11px;font-size:12px;border-radius:6px;}
+input[type=text],input[type=date],input[type=time],input[type=email],input[type=number],select,textarea{
+  font-family:var(--sans);border:1px solid var(--line);border-radius:7px;padding:9px 11px;font-size:13px;
+  color:var(--ink-900);background:#fff;width:100%;
+}
+textarea{resize:vertical;}
+label.field-label{font-size:11.5px;font-weight:700;color:var(--ink-500);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px;}
+.field{margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;
+  font-family:var(--mono);letter-spacing:.3px;
+}
+.b-cotizado{background:#eef2f7;color:#5c6b7d;}
+.b-nominado{background:var(--amber-100);color:var(--amber-600);}
+.b-operacion{background:#e4eefb;color:var(--blue-600);}
+.b-salido{background:#eee6fb;color:#6b3fb8;}
+.b-reporte{background:#e9f6fb;color:#127e8a;}
+.b-facturado{background:var(--green-100);color:var(--green-600);}
+.b-noaceptado{background:var(--red-100);color:var(--red-600);}
+.b-cancelado{background:#f1f1f1;color:#7a7a7a;}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+.toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.toolbar input,.toolbar select{width:auto;min-width:170px;}
+.toolbar input{flex:1;min-width:220px;}
+
+table.data{width:100%;border-collapse:collapse;font-size:13px;}
+table.data thead th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-500);
+  padding:10px 14px;border-bottom:1px solid var(--line);background:#f8fafc;font-weight:700;
+}
+table.data tbody td{padding:12px 14px;border-bottom:1px solid var(--line);}
+table.data tbody tr{cursor:pointer;}
+table.data tbody tr:hover{background:#f5f9fc;}
+.mono{font-family:var(--mono);}
+.muted{color:var(--ink-500);}
+.small{font-size:12px;}
+
+/* ---------- modal ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(9,20,32,.55);display:flex;align-items:flex-start;justify-content:center;
+  padding:40px 16px;z-index:50;overflow-y:auto;
+}
+.modal{
+  background:var(--card);border-radius:14px;max-width:1180px;width:100%;padding:26px 30px 34px;position:relative;
+  box-shadow:0 30px 60px rgba(0,0,0,.3);
+}
+.modal-close{position:absolute;top:20px;right:20px;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:16px;color:var(--ink-700);}
+.modal h3{margin:0;font-size:20px;font-weight:800;}
+.modal .sub{color:var(--ink-500);font-size:12.5px;margin-top:4px;}
+.section-title{font-size:15px;font-weight:800;margin:26px 0 12px;display:flex;align-items:center;gap:8px;}
+.section-title .count{font-family:var(--mono);font-weight:500;font-size:11.5px;color:var(--ink-500);}
+
+.flujo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.step{
+  border:1px solid var(--line);border-radius:9px;padding:12px 13px;cursor:pointer;background:#fff;transition:.12s;
+}
+.step:hover{border-color:var(--blue-500);}
+.step.done{background:var(--green-100);border-color:#b6e4c9;}
+.step.rejected{background:var(--red-100);border-color:#f0bdb6;}
+.step.active-sel{outline:2px solid var(--blue-500);outline-offset:1px;}
+.step-top{display:flex;align-items:center;gap:9px;}
+.check{
+  width:19px;height:19px;border-radius:5px;border:1.5px solid var(--ink-300);flex:0 0 19px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;
+}
+.step.done .check{background:var(--green-600);border-color:var(--green-600);}
+.step.rejected .check{background:var(--red-600);border-color:var(--red-600);}
+.step-title{font-size:13px;font-weight:700;}
+.step-desc{font-size:11.5px;color:var(--ink-500);margin-top:5px;line-height:1.4;}
+.alarm-tag{display:inline-block;margin-top:6px;font-size:10.5px;font-weight:700;color:var(--red-600);font-family:var(--mono);}
+
+.action-panel{margin-top:14px;background:#f8fafc;border:1px dashed var(--ink-300);border-radius:10px;padding:16px 18px;}
+.action-panel h4{margin:0 0 12px;font-size:13.5px;}
+.attach-chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);padding:5px 10px;border-radius:6px;font-size:12px;margin-bottom:10px;}
+
+.composer{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 4px 14px rgba(15,35,50,.06);}
+.composer-head{background:var(--navy-900);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:700;letter-spacing:.2px;}
+.composer-head .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-gold);display:inline-block;margin-right:8px;}
+.composer-body{padding:14px 16px;}
+.composer-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.composer-row label{width:60px;flex:0 0 60px;color:var(--ink-500);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+.composer-row input{border:none;padding:2px 0;flex:1;background:transparent;}
+.composer-row input:focus{outline:none;}
+.composer-body textarea{border:none;padding:12px 0 4px;width:100%;font-size:13px;resize:vertical;background:transparent;}
+.composer-body textarea:focus{outline:none;}
+.composer-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#f8fafc;border-top:1px solid var(--line);}
+.sending-flash{display:inline-flex;align-items:center;gap:7px;color:var(--green-600);font-size:12.5px;font-weight:700;}
+
+.doctabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin-bottom:12px;}
+.doctab{padding:8px 2px;font-size:13px;font-weight:700;color:var(--ink-500);cursor:pointer;border-bottom:2px solid transparent;}
+.doctab.active{color:var(--blue-600);border-color:var(--blue-600);}
+.doclist{font-size:12.5px;color:var(--ink-500);margin-bottom:12px;}
+.docrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+
+.logrow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.logrow .who{color:var(--ink-500);font-family:var(--mono);font-size:11px;}
+
+.toast{
+  position:fixed;bottom:22px;right:22px;background:var(--navy-900);color:#fff;padding:12px 18px;border-radius:9px;
+  font-size:13px;font-weight:600;z-index:100;box-shadow:0 10px 24px rgba(0,0,0,.25);opacity:0;transform:translateY(8px);
+  transition:.25s;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* entities */
+.tabs-row{display:flex;gap:8px;margin-bottom:18px;}
+.tabbtn{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink-700);}
+.tabbtn.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900);}
+.entity-layout{display:grid;grid-template-columns:270px 1fr;gap:18px;}
+.entity-list{border-right:1px solid var(--line);}
+.entity-row{padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px;font-weight:600;}
+.entity-row:hover{background:#f5f9fc;}
+.entity-row.active{background:#e4eefb;color:var(--blue-600);}
+.subtabs{display:flex;gap:16px;border-bottom:1px solid var(--line);margin-bottom:18px;}
+.subtab{padding:9px 2px;font-size:12.5px;font-weight:700;color:var(--ink-500);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.3px;}
+.subtab.active{color:var(--teal-700);border-color:var(--teal-700);}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.kpi{padding:18px 18px;}
+.kpi .lbl{font-size:11px;color:var(--ink-500);text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+.kpi .val{font-size:26px;font-weight:800;margin-top:6px;font-family:var(--mono);}
+.kpi .delta{font-size:12px;margin-top:4px;font-weight:700;}
+.delta.up{color:var(--green-600);}
+.delta.down{color:var(--red-600);}
+.chart-card{padding:20px 22px;margin-bottom:20px;}
+.chart-card h4{margin:0 0 2px;font-size:14.5px;}
+.chart-card .cap{font-size:12px;color:var(--ink-500);margin-bottom:14px;}
+.chart-row{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
+
+.aging-table td,.aging-table th{text-align:right;}
+.aging-table td:first-child,.aging-table th:first-child{text-align:left;}
+
+.empty{padding:40px;text-align:center;color:var(--ink-500);font-size:13px;}
+
+/* ---------- stepper (Cotizaciones) ---------- */
+.stepper{display:flex;align-items:center;margin-bottom:22px;}
+.stepper-item{display:flex;flex-direction:column;align-items:center;gap:7px;flex:0 0 auto;}
+.stepper-circle{
+  width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;font-size:13px;border:2px solid var(--ink-300);color:var(--ink-500);background:#fff;
+}
+.stepper-item.done .stepper-circle{background:var(--green-600);border-color:var(--green-600);color:#fff;}
+.stepper-item.current .stepper-circle{border-color:var(--brand-gold);color:var(--brand-gold-dark);box-shadow:0 0 0 3px rgba(253,197,0,.18);}
+.stepper-label{font-size:11px;font-weight:700;color:var(--ink-500);text-align:center;text-transform:uppercase;letter-spacing:.3px;max-width:90px;}
+.stepper-item.current .stepper-label{color:var(--ink-900);}
+.stepper-line{flex:1;height:2px;background:var(--ink-300);margin:0 6px 22px;}
+.stepper-line.done{background:var(--green-600);}
+
+.field-auto{position:relative;}
+.auto-flag{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--blue-600);text-transform:uppercase;letter-spacing:.3px;margin-left:8px;}
+.field-auto input,.field-auto select{border-color:#bfe3ec;background:#f4fbfd;}
+
+/* ---------- mini-KPI row (Pizarra/Registro) ---------- */
+.mini-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.mini-kpi{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.mini-kpi .lbl{font-size:11px;color:var(--ink-500);text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+.mini-kpi .val{font-size:24px;font-weight:800;font-family:var(--mono);margin-top:4px;}
+.mini-kpi.alarm{border-color:#f0bdb6;}
+.mini-kpi.alarm .val{color:var(--red-600);}
+.alarm-row-tag{color:var(--red-600);margin-right:5px;}
+
+/* ---------- next-step highlight (ficha de expediente) ---------- */
+.step.next-step{border-color:var(--brand-gold);box-shadow:0 0 0 2px rgba(253,197,0,.25);}
+.next-step-tag{position:absolute;top:-9px;right:8px;background:var(--brand-gold);color:var(--navy-950);font-family:var(--mono);font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:5px;letter-spacing:.3px;}
+.step{position:relative;}
+
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:#c6d2df;border-radius:8px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">
+        <svg width="132" height="30" viewBox="0 0 132 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SCAMP">
+          <text x="0" y="22" font-family="Inter, sans-serif" font-weight="800" font-size="23" letter-spacing="0.5" fill="#ffffff">SC</text>
+          <path d="M46 22 L52.5 6 L59 22 L54.5 22 L52.5 16.5 L50.5 22 Z" fill="var(--brand-gold, #fdc500)"/>
+          <text x="60" y="22" font-family="Inter, sans-serif" font-weight="800" font-size="23" letter-spacing="0.5" fill="#ffffff">MP</text>
+        </svg>
+      </div>
+      <p style="margin:6px 0 0;font-size:11px;color:#8fa9c4;letter-spacing:.4px;">Ship Care &amp; Maintenance</p>
+      <div class="port-switch">
+        <div class="port-pill active">Algeciras</div>
+        <div class="port-pill" onclick="toast('Vista Gibraltar — próximamente en este mock-up')">Gibraltar</div>
+      </div>
+    </div>
+    <nav class="mainnav" id="mainnav"></nav>
+    <div class="sidebar-foot">Operador: <b style="color:#cfe0f2">M. Ruiz</b><br>ESALG · Bahía de Algeciras</div>
+  </aside>
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow" id="topbar-eyebrow">Submenú</div>
+        <h2 id="topbar-title">—</h2>
+      </div>
+      <div class="topbar-right">
+        <span class="clock" id="clock"></span>
+      </div>
+    </div>
+    <div class="view" id="view-root"></div>
+  </main>
+</div>
+<div id="modal-root"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* =========================================================
+   SCAMP MOCKUP — datos de demostración y lógica de interfaz
+   Todo el contenido es simulado (no hay backend real).
+   La generación de PDF de la oferta SÍ es real (jsPDF, client-side).
+   ========================================================= */
+
+const SECTIONS = [
+  {key:'cotizaciones', label:'Cotizaciones'},
+  {key:'pizarra', label:'Pizarra de servicios'},
+  {key:'registro', label:'Registro operativo'},
+  {key:'entidades', label:'Motor de entidades'},
+  {key:'dashboard', label:'Dashboard management'},
+];
+
+const CLIENTES = [
+  {id:'alfa', name:'Alfa Ship Management', vat:'MT-29817744', email:'ops@alfaship.com', emailAccounts:['ops@alfaship.com','accounts@alfaship.com'], phone:'+356 2133 8842', address:'Level 3, Portomaso Business Tower, St Julians, Malta', bank:'HSBC Malta · IBAN MT84HSBC0000000123456789', credit:'30 días fecha factura',
+    rates:[{concepto:'Hull Cleaning (por m² casco)',precio:'2,80 €/m²'},{concepto:'Propeller Polishing',precio:'1.450 €/hélice'},{concepto:'Underwater Inspection (UWILD)',precio:'1.950 € fijo'},{concepto:'Suplemento nocturno',precio:'+18%'}],
+    notes:'Abono acordado 5% sobre facturación anual > 40.000€. Sin recargo por festivo si se avisa con 72h.',
+    fixing:{pedidas:14, cerradas:11},
+    aging:{d30:8200,d60:0,d90:0,d90p:0}},
+  {id:'meridian', name:'Meridian Bulk Carriers', vat:'HK-778213', email:'agecom@meridianbulk.hk', emailAccounts:['agecom@meridianbulk.hk'], phone:'+852 2915 0031', address:'19/F, Harbour Centre, 25 Harbour Rd, Wan Chai, Hong Kong', bank:'HSBC HK · IBAN HK93HSBC00001122334455', credit:'45 días fecha factura',
+    rates:[{concepto:'Hull Cleaning (por m² casco)',precio:'2,60 €/m²'},{concepto:'Propeller Polishing',precio:'1.380 €/hélice'},{concepto:'Underwater Inspection (UWILD)',precio:'1.800 € fijo'}],
+    notes:'Descuento 10% en inspecciones si se contrata junto a limpieza de casco.',
+    fixing:{pedidas:9, cerradas:9},
+    aging:{d30:0,d60:15400,d90:0,d90p:0}},
+  {id:'nordic', name:'Nordic Ferry & Ro-Ro AS', vat:'NO-991827364', email:'technical@nordicferry.no', emailAccounts:['technical@nordicferry.no','ap@nordicferry.no'], phone:'+47 55 30 12 00', address:'Skoltegrunnskaien 1, 5003 Bergen, Noruega', bank:'DNB · IBAN NO9386011117947', credit:'60 días fecha factura',
+    rates:[{concepto:'Hull Cleaning (por m² casco)',precio:'3,10 €/m²'},{concepto:'Propeller Polishing',precio:'1.600 €/hélice'},{concepto:'Underwater Inspection (UWILD)',precio:'2.100 € fijo'}],
+    notes:'Cliente exige informe fotográfico HD en todos los servicios.',
+    fixing:{pedidas:6, cerradas:4},
+    aging:{d30:0,d60:0,d90:6100,d90p:0}},
+  {id:'orion', name:'Orion Tankers Pte Ltd', vat:'SG-198203441', email:'ops.sg@oriontankers.com', emailAccounts:['ops.sg@oriontankers.com'], phone:'+65 6222 4471', address:'80 Raffles Place, UOB Plaza, Singapore', bank:'DBS Bank · IBAN SG12DBSS9988776655', credit:'30 días fecha factura',
+    rates:[{concepto:'Hull Cleaning (por m² casco)',precio:'2,95 €/m²'},{concepto:'Propeller Polishing',precio:'1.500 €/hélice'},{concepto:'Underwater Inspection (UWILD)',precio:'2.000 € fijo'}],
+    notes:'Sin acuerdo de abonos. Facturación estricta a 30 días, recargo 1,5% mensual por demora.',
+    fixing:{pedidas:11, cerradas:7},
+    aging:{d30:4300,d60:0,d90:0,d90p:9200}},
+];
+
+const AGENTES = [
+  {id:'berge', name:'Bergé Marítima Algeciras', contact:'Javier Soler', email:'ops.algeciras@bergemaritima.com', phone:'+34 956 58 41 12'},
+  {id:'rusco', name:'Rusco Shipping Agency', contact:'Carmen Vidal', email:'agency@ruscoshipping.es', phone:'+34 956 60 27 90'},
+  {id:'medway', name:'Medway Agencia Marítima', contact:'Tomás Reyes', email:'algeciras@medwayagency.com', phone:'+34 956 66 14 05'},
+];
+
+const PORTUARIAS = [
+  {id:'apba', name:'Autoridad Portuaria Bahía de Algeciras', dept:'Servicios Técnico-Náuticos', email:'stn@apba.es', phone:'+34 956 58 54 00'},
+  {id:'capitania', name:'Capitanía Marítima de Algeciras', dept:'Inspección y Control', email:'algeciras@capitaniamaritima.es', phone:'+34 956 58 22 00'},
+];
+
+const FLUJO_STEPS = [
+  {key:'cot', title:'Cotización enviada', desc:'Primer paso comercial antes de la confirmación.', type:'auto'},
+  {key:'accept', title:'Aceptación oferta', desc:'El cliente acepta o rechaza la oferta enviada.', type:'accept'},
+  {key:'prearrival_master', title:'Pre arrival Master', desc:'Mail al capitán tras confirmación del servicio.', type:'send', to:'capitan', alarm:48},
+  {key:'mail_agencia', title:'Mail agencia nominación', desc:'Aviso al agente; puede incluir RP si la fecha está cercana.', type:'send', to:'agente'},
+  {key:'prearrival_recibido', title:'Prearrival recibido', desc:'Documentos de prearrival solicitados al Master y recibidos.', type:'upload'},
+  {key:'rp_agente', title:'RP al agente', desc:'Envío de RP al agente, junto a nominación o en correo posterior.', type:'send', to:'agente', attach:'RP.pdf'},
+  {key:'notif_af', title:'Notificación + AF Capitanía', desc:'Notificación a la Autoridad Portuaria y envío de Antifouling a Capitanía (solo si hay limpieza de casco).', type:'send', to:'capitania'},
+  {key:'presupuesto', title:'Presupuesto subido', desc:'Se sube cuando la agencia carga el RP en plataforma.', type:'confirm', alarm:24},
+  {key:'permisos', title:'Permisos aprobados', desc:'Cuando la plataforma queda en pendiente factura.', type:'confirm'},
+  {key:'arrival_instr', title:'Arrival instructions', desc:'Instrucciones al capitán 12/24h antes de la llegada.', type:'send', to:'capitan'},
+  {key:'commenced', title:'Commenced ops', desc:'Buzo en agua y aviso enviado.', type:'ops', label:'Hora de inicio'},
+  {key:'completed', title:'Completed ops', desc:'Trabajos terminados.', type:'ops', label:'Hora de finalización'},
+  {key:'final_report', title:'Final report', desc:'Reporte de buzos editado y enviado.', type:'report'},
+  {key:'factura', title:'Factura', desc:'Factura generada según datos del sistema, editable.', type:'invoice'},
+];
+
+const PIZARRA_STATUSES = ['Cotizado','Nominado','En operación','Salido','Reporte Efectuado'];
+const REGISTRO_STATUSES = ['Facturado','No aceptado','Cancelado'];
+
+function emptyFlujo(){
+  const f={};
+  FLUJO_STEPS.forEach(s=>f[s.key]={done:false});
+  return f;
+}
+
+let EXPEDIENTES = [
+  mkExp('JN-2026-041','Newport','alfa','2026-07-14','2026-07-14','2026-07-16','Hull Cleaning, Propeller Polishing','En operación',
+    {cot:true,accept:true,prearrival_master:true,mail_agencia:true,prearrival_recibido:false,rp_agente:false,notif_af:true,presupuesto:false,permisos:true,arrival_instr:false,commenced:true,completed:false,final_report:false,factura:false},
+    ['Quote sent','Client confirmed','Permit approved','Commenced ops'], 12400, {imo:'9456123',loa:'182',draft:'11.4'}),
+  mkExp('JN-2026-042','Nordic Star','nordic','2026-07-13','2026-07-13','2026-07-13','Underwater Inspection (UWILD)','Reporte Efectuado',
+    {cot:true,accept:true,prearrival_master:true,mail_agencia:true,prearrival_recibido:true,rp_agente:true,notif_af:true,presupuesto:true,permisos:true,arrival_instr:true,commenced:true,completed:true,final_report:true,factura:false},
+    ['Quote sent','Client confirmed','Permit approved','Commenced ops','Completed ops','Final report sent'], 2100, {imo:'9312207',loa:'154',draft:'6.8'}),
+  mkExp('JN-2026-039','Orion Pathfinder','orion','2026-07-10','2026-07-10','2026-07-11','Propeller Polishing','Facturado',
+    {cot:true,accept:true,prearrival_master:true,mail_agencia:true,prearrival_recibido:true,rp_agente:true,notif_af:true,presupuesto:true,permisos:true,arrival_instr:true,commenced:true,completed:true,final_report:true,factura:true},
+    ['Quote sent','Client confirmed','Invoice issued'], 4900, {imo:'9198864',loa:'249',draft:'14.1'}),
+  mkExp('JN-2026-044','Meridian Trader','meridian','2026-07-16','—','—','Hull Cleaning','Nominado',
+    {cot:true,accept:true,prearrival_master:false,mail_agencia:false,prearrival_recibido:false,rp_agente:false,notif_af:false,presupuesto:false,permisos:false,arrival_instr:false,commenced:false,completed:false,final_report:false,factura:false},
+    ['Quote sent','Client confirmed'], 9800, {imo:'9377512',loa:'199',draft:'12.0'}),
+  mkExp('JN-2026-045','Cabo Trafalgar','alfa','2026-07-18','—','—','Underwater Inspection (UWILD)','Cotizado',
+    {cot:true,accept:false,prearrival_master:false,mail_agencia:false,prearrival_recibido:false,rp_agente:false,notif_af:false,presupuesto:false,permisos:false,arrival_instr:false,commenced:false,completed:false,final_report:false,factura:false},
+    ['Quote sent'], 1950, {imo:'9502281',loa:'171',draft:'9.9'}),
+  mkExp('JN-2026-036','Orion Voyager','orion','2026-07-05','2026-07-05','2026-07-05','Hull Cleaning','No aceptado',
+    {cot:true,accept:'rejected',prearrival_master:false,mail_agencia:false,prearrival_recibido:false,rp_agente:false,notif_af:false,presupuesto:false,permisos:false,arrival_instr:false,commenced:false,completed:false,final_report:false,factura:false},
+    ['Quote sent','Offer rejected — cliente usó proveedor local'], 8700, {imo:'9244410',loa:'233',draft:'13.5'}),
+  mkExp('JN-2026-030','Bergen Carrier','nordic','2026-06-28','—','—','Propeller Polishing','Cancelado',
+    {cot:true,accept:false,prearrival_master:false,mail_agencia:false,prearrival_recibido:false,rp_agente:false,notif_af:false,presupuesto:false,permisos:false,arrival_instr:false,commenced:false,completed:false,final_report:false,factura:false},
+    ['Quote sent','Cancelled by client'], 1600, {imo:'9265590',loa:'145',draft:'7.2'}),
+];
+let seq=46;
+
+function mkExp(id,ship,clientId,eta,etb,ets,work,status,flujoFlags,logTitles,price,extra){
+  const flujo=emptyFlujo();
+  Object.keys(flujoFlags).forEach(k=>{
+    if(flujoFlags[k]==='rejected') flujo[k]={done:true,rejected:true,motivo:'Cliente usó proveedor local en Algeciras.'};
+    else flujo[k]={done:!!flujoFlags[k]};
+  });
+  return {
+    id, ship, clientId, eta, etb, ets, work, status, flujo,
+    log: logTitles.map((t,i)=>({text:t, who:'M. Ruiz', when:relDate(-logTitles.length+i)})),
+    price, imo:extra.imo, loa:extra.loa, draft:extra.draft,
+    docs:{jobReports:[],permisos:[],servicios:[]},
+    lastAction: logTitles[logTitles.length-1]||'Cotización enviada',
+    lastActionDate: relDate(0),
+  };
+}
+function relDate(offsetDays){
+  const d=new Date(); d.setDate(d.getDate()+offsetDays);
+  return d.toISOString().slice(0,10);
+}
+function clientById(id){return CLIENTES.find(c=>c.id===id);}
+function badgeClass(status){
+  return {
+    'Cotizado':'b-cotizado','Nominado':'b-nominado','En operación':'b-operacion','Salido':'b-salido',
+    'Reporte Efectuado':'b-reporte','Facturado':'b-facturado','No aceptado':'b-noaceptado','Cancelado':'b-cancelado'
+  }[status] || 'b-cotizado';
+}
+
+/* ---------------- App shell ---------------- */
+let currentSection='cotizaciones';
+let modalExpId=null;
+let activeStepKey=null;
+
+function renderNav(){
+  const nav=document.getElementById('mainnav');
+  nav.innerHTML = SECTIONS.map((s,i)=>`
+    <div class="navitem ${s.key===currentSection?'active':''}" onclick="goTo('${s.key}')">
+      <span class="num">${String(i+1).padStart(2,'0')}</span>${s.label}
+    </div>`).join('');
+}
+function goTo(key){
+  currentSection=key;
+  renderNav();
+  document.getElementById('topbar-eyebrow').textContent = 'Submenú ' + (SECTIONS.findIndex(s=>s.key===key)+1) + ' · SCAMP Algeciras';
+  document.getElementById('topbar-title').textContent = SECTIONS.find(s=>s.key===key).label;
+  renderView();
+}
+function tickClock(){
+  document.getElementById('clock').textContent = new Date().toLocaleString('es-ES',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+setInterval(tickClock,1000*20); tickClock();
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(window.__toastTO);
+  window.__toastTO=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+function renderView(){
+  const root=document.getElementById('view-root');
+  if(currentSection==='cotizaciones') root.innerHTML=viewCotizaciones();
+  if(currentSection==='pizarra'){ root.innerHTML=viewBoard(PIZARRA_STATUSES,'pizarra'); wireBoardFilters('pizarra'); }
+  if(currentSection==='registro'){ root.innerHTML=viewBoard(REGISTRO_STATUSES,'registro'); wireBoardFilters('registro'); }
+  if(currentSection==='entidades'){ root.innerHTML=viewEntidades(); wireEntidades(); }
+  if(currentSection==='dashboard'){ root.innerHTML=viewDashboard(); wireDashboard(); }
+  if(currentSection==='cotizaciones') wireCotizador();
+}
+
+/* ==================================================================
+   1. COTIZACIONES
+   ================================================================== */
+let cotDraft = {ship:'',eta:'',imo:'',work:[],clientId:'',loa:'',draft:''};
+const WORK_OPTIONS = ['Hull Cleaning','Propeller Polishing','Underwater Inspection (UWILD)','Sea Chest Cleaning','Anode Inspection'];
+
+function cotCurrentStep(){
+  if(!cotDraft.ship) return 1;
+  if(!offerState) return 2;
+  return 4;
+}
+function renderCotStepper(){
+  const cur = cotCurrentStep();
+  const steps = [
+    {n:1, label:'Lector OCR'},
+    {n:2, label:'Datos extraídos'},
+    {n:3, label:'Oferta cliente'},
+    {n:4, label:'Enviar'},
+  ];
+  return `<div class="stepper">
+    ${steps.map((s,i)=>`
+      ${i>0?`<div class="stepper-line ${s.n<=cur?'done':''}"></div>`:''}
+      <div class="stepper-item ${s.n<cur?'done':''} ${s.n===cur?'current':''}">
+        <div class="stepper-circle">${s.n<cur?'✓':s.n}</div>
+        <div class="stepper-label">${s.label}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function viewCotizaciones(){
+  const auto = cotDraft.ship ? '<span class="auto-flag">⚡ autocompletado</span>' : '';
+  return `
+  ${renderCotStepper()}
+  <div class="grid2" style="align-items:start;">
+    <div class="card" style="padding:22px 24px;">
+      <div class="section-title" style="margin-top:0;">① Lector OCR / entrada de datos</div>
+      <p class="small muted" style="margin-top:-6px;">Pega texto, arrastra un correo o simula una imagen escaneada. El sistema extraerá los campos clave.</p>
+      <div class="field">
+        <textarea id="ocr-input" rows="7" placeholder="Pega aquí el email, nomination o texto OCR...">Dear Sirs,
+
+Please find nomination for M/V MERIDIAN TRADER, IMO 9377512, ETA Algeciras 16-07-2026.
+LOA 199m / Draft 12.0m. Kindly quote for hull cleaning at anchorage.
+Client: Meridian Bulk Carriers.
+
+Best regards,
+Agency Ops</textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="runOCR()">Analizar OCR</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('ocr-input').value=''">Limpiar</button>
+      </div>
+
+      <div class="section-title">② Datos extraídos (editable) ${auto}</div>
+      <div class="grid2 field-auto">
+        <div class="field"><label class="field-label">Barco</label><input id="f-ship" type="text" value="${cotDraft.ship}"></div>
+        <div class="field"><label class="field-label">Cliente</label>
+          <select id="f-client">
+            <option value="">— seleccionar —</option>
+            ${CLIENTES.map(c=>`<option value="${c.id}" ${cotDraft.clientId===c.id?'selected':''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label class="field-label">ETA</label><input id="f-eta" type="date" value="${cotDraft.eta}"></div>
+        <div class="field"><label class="field-label">IMO Number</label><input id="f-imo" type="text" value="${cotDraft.imo}"></div>
+        <div class="field"><label class="field-label">LoA (m)</label><input id="f-loa" type="text" value="${cotDraft.loa}"></div>
+        <div class="field"><label class="field-label">Draft (m)</label><input id="f-draft" type="text" value="${cotDraft.draft}"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Trabajo a realizar</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${WORK_OPTIONS.map(w=>`<label style="display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:12.5px;cursor:pointer;">
+            <input type="checkbox" class="f-work" value="${w}" ${cotDraft.work.includes(w)?'checked':''} style="width:auto;"> ${w}
+          </label>`).join('')}
+        </div>
+      </div>
+      <button class="btn btn-blue" onclick="prepararOferta()">Preparar oferta →</button>
+    </div>
+
+    <div class="card" style="padding:22px 24px;" id="offer-col">
+      ${renderOfferColumn()}
+    </div>
+  </div>`;
+}
+
+function runOCR(){
+  const text = document.getElementById('ocr-input').value;
+  const shipM = text.match(/M\/V\s+([A-Z0-9 ]+?)(?:,|\.|\n)/i) || text.match(/(?:vessel|buque|barco)[:\s]+([A-Za-z0-9 ]+)/i);
+  const imoM = text.match(/IMO\s*[:\-]?\s*(\d{7})/i);
+  const etaM = text.match(/(\d{2})[-\/](\d{2})[-\/](\d{4})/) || text.match(/(\d{4})-(\d{2})-(\d{2})/);
+  const loaM = text.match(/LOA\s*[:\-]?\s*(\d+(?:\.\d+)?)/i);
+  const draftM = text.match(/Draft\s*[:\-]?\s*(\d+(?:\.\d+)?)/i);
+  let clientId='';
+  CLIENTES.forEach(c=>{ if(text.toLowerCase().includes(c.name.split(' ')[0].toLowerCase())) clientId=c.id; });
+  let eta='';
+  if(etaM){
+    if(etaM[3] && etaM[3].length===4) eta = `${etaM[3]}-${etaM[2]}-${etaM[1]}`;
+    else eta = `${etaM[1]}-${etaM[2]}-${etaM[3]}`;
+  }
+  const work=[];
+  if(/hull/i.test(text)) work.push('Hull Cleaning');
+  if(/propeller|hélice/i.test(text)) work.push('Propeller Polishing');
+  if(/inspection|uwild/i.test(text)) work.push('Underwater Inspection (UWILD)');
+
+  cotDraft = {
+    ship: shipM ? shipM[1].trim() : cotDraft.ship,
+    eta: eta || cotDraft.eta,
+    imo: imoM ? imoM[1] : cotDraft.imo,
+    work: work.length ? work : cotDraft.work,
+    clientId: clientId || cotDraft.clientId,
+    loa: loaM ? loaM[1] : cotDraft.loa,
+    draft: draftM ? draftM[1] : cotDraft.draft,
+  };
+  renderView();
+  toast('OCR analizado — revisa y completa los campos que falten');
+}
+
+function collectDraftFromForm(){
+  cotDraft.ship = document.getElementById('f-ship').value;
+  cotDraft.clientId = document.getElementById('f-client').value;
+  cotDraft.eta = document.getElementById('f-eta').value;
+  cotDraft.imo = document.getElementById('f-imo').value;
+  cotDraft.loa = document.getElementById('f-loa').value;
+  cotDraft.draft = document.getElementById('f-draft').value;
+  cotDraft.work = Array.from(document.querySelectorAll('.f-work:checked')).map(i=>i.value);
+}
+
+let offerState=null; // {text, emailTo, emailSubject, emailBody}
+
+function renderOfferColumn(){
+  if(!offerState){
+    return `
+      <div class="section-title" style="margin-top:0;">③ Oferta en formato cliente</div>
+      <div class="empty">Completa los datos y pulsa <b>Preparar oferta</b> para generar el documento.</div>`;
+  }
+  const c = clientById(cotDraft.clientId);
+  return `
+    <div class="section-title" style="margin-top:0;">③ Oferta en formato cliente <span class="count">· ${c?c.name:''}</span></div>
+    <textarea id="offer-text" rows="13" style="font-family:var(--mono);font-size:12px;">${offerState.text}</textarea>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+      <button class="btn btn-ghost" onclick="descargarOfertaPDF()">⬇ Descargar PDF</button>
+      ${offerState.pdfReady ? `<span class="small" style="color:var(--green-600);font-weight:700;">✓ PDF generado — ${offerState.pdfName}</span>` : `<span class="small muted">Genera el PDF antes de enviar (opcional, se adjunta si existe)</span>`}
+    </div>
+
+    <div class="section-title">④ Enviar al cliente</div>
+    <div class="field"><label class="field-label">Para</label><input id="mail-to" type="email" value="${offerState.emailTo}"></div>
+    <div class="field"><label class="field-label">Asunto</label><input id="mail-subject" type="text" value="${offerState.emailSubject}"></div>
+    <div class="field"><label class="field-label">Mensaje</label><textarea id="mail-body" rows="6">${offerState.emailBody}</textarea></div>
+    ${offerState.pdfReady ? `<div class="attach-chip">📎 ${offerState.pdfName}</div>` : ''}
+    <button class="btn btn-primary" onclick="enviarOferta()">Enviar oferta al cliente ✓</button>
+  `;
+}
+
+function prepararOferta(){
+  collectDraftFromForm();
+  if(!cotDraft.ship || !cotDraft.clientId){
+    toast('Falta Barco o Cliente — complétalos antes de preparar la oferta'); return;
+  }
+  const c = clientById(cotDraft.clientId);
+  const lines = cotDraft.work.map(w=>{
+    const r = c.rates.find(r=>r.concepto.toLowerCase().includes(w.split(' ')[0].toLowerCase()));
+    return ` - ${w}${r ? '  ...........  '+r.precio : ''}`;
+  }).join('\n');
+  const text =
+`SCAMP · Ship Care and Maintenance
+Puerto de Algeciras (ESALG)
+
+OFERTA DE SERVICIOS SUBACUÁTICOS
+Cliente: ${c.name}
+Buque: ${cotDraft.ship}   IMO: ${cotDraft.imo || '—'}
+ETA: ${cotDraft.eta || '—'}   LOA: ${cotDraft.loa||'—'} m   Draft: ${cotDraft.draft||'—'} m
+
+Servicios cotizados:
+${lines || ' - (seleccionar trabajo)'}
+
+Condiciones: ${c.credit}. Tarifas según acuerdo vigente con ${c.name}.
+${c.notes}
+
+Quedamos a la espera de su confirmación para proceder con la nominación.
+
+SCAMP Operations Team — Algeciras`;
+
+  offerState = {
+    text,
+    emailTo: c.email,
+    emailSubject: `SCAMP Quote — ${cotDraft.ship} — Algeciras`,
+    emailBody: `Dear ${c.name} team,\n\nPlease find attached our quotation for the underwater services requested for M/V ${cotDraft.ship} (ETA ${cotDraft.eta||'TBC'}).\n\nKindly confirm at your earliest convenience so we can proceed with nomination.\n\nBest regards,\nSCAMP Operations — Algeciras`,
+    pdfReady: false,
+    pdfName: ''
+  };
+  document.getElementById('offer-col').innerHTML = renderOfferColumn();
+}
+
+/* ---------------- Generación real de PDF (jsPDF) ---------------- */
+function descargarOfertaPDF(){
+  if(!offerState) return;
+  const c = clientById(cotDraft.clientId);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginL = 48;
+  let y = 56;
+
+  // Header — banda navy con marca SCAMP
+  doc.setFillColor(4,34,45); // navy-950
+  doc.rect(0,0,pageW,72,'F');
+  doc.setFillColor(253,197,0); // brand-gold
+  doc.rect(0,72,pageW,3,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(20);
+  doc.text('SCAMP', marginL, 34);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+  doc.text('Ship Care & Maintenance · Puerto de Algeciras (ESALG)', marginL, 52);
+  doc.setFontSize(9); doc.setTextColor(220,232,245);
+  doc.text(new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}), pageW-marginL, 34, {align:'right'});
+
+  y = 108;
+  doc.setTextColor(16,24,39);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('OFERTA DE SERVICIOS SUBACUÁTICOS', marginL, y);
+  y += 22;
+
+  doc.setDrawColor(226,232,240); doc.line(marginL, y, pageW-marginL, y); y += 20;
+
+  const field = (label, value) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(label.toUpperCase(), marginL, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(16,24,39);
+    doc.text(String(value||'—'), marginL + 110, y);
+    y += 18;
+  };
+  field('Cliente', c ? c.name : '—');
+  field('Buque', cotDraft.ship);
+  field('IMO', cotDraft.imo);
+  field('ETA', cotDraft.eta);
+  field('LOA / Draft', `${cotDraft.loa||'—'} m / ${cotDraft.draft||'—'} m`);
+
+  y += 8;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(16,24,39);
+  doc.text('Servicios cotizados', marginL, y); y += 14;
+  doc.setDrawColor(226,232,240); doc.line(marginL, y-10, pageW-marginL, y-10);
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+  const rates = c ? c.rates : [];
+  cotDraft.work.forEach(w=>{
+    const r = rates.find(r=>r.concepto.toLowerCase().includes(w.split(' ')[0].toLowerCase()));
+    doc.setTextColor(16,24,39);
+    doc.text(`•  ${w}`, marginL+6, y);
+    doc.setTextColor(0,129,158);
+    doc.text(r ? r.precio : 'A confirmar', pageW-marginL, y, {align:'right'});
+    y += 18;
+  });
+
+  y += 10;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+  doc.text('CONDICIONES', marginL, y); y += 14;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(55,66,85);
+  const condLines = doc.splitTextToSize(`${c ? c.credit : '—'}. Tarifas según acuerdo vigente con ${c ? c.name : 'el cliente'}. ${c ? c.notes : ''}`, pageW - marginL*2);
+  doc.text(condLines, marginL, y); y += condLines.length*13 + 16;
+
+  doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(100,116,139);
+  doc.text('Quedamos a la espera de su confirmación para proceder con la nominación.', marginL, y);
+
+  // Footer
+  doc.setDrawColor(226,232,240);
+  doc.line(marginL, 790, pageW-marginL, 790);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(148,163,184);
+  doc.text('SCAMP Operations Team — Algeciras · Documento generado automáticamente desde el sistema de cotizaciones', marginL, 804);
+
+  const fileName = `SCAMP_Oferta_${(cotDraft.ship||'buque').replace(/\s+/g,'_')}_${cotDraft.eta||'sf'}.pdf`;
+  doc.save(fileName);
+
+  offerState.pdfReady = true;
+  offerState.pdfName = fileName;
+  document.getElementById('offer-col').innerHTML = renderOfferColumn();
+  toast('PDF generado y descargado — ' + fileName);
+}
+
+function enviarOferta(){
+  const text = document.getElementById('offer-text').value;
+  const to = document.getElementById('mail-to').value;
+  const subject = document.getElementById('mail-subject').value;
+  const body = document.getElementById('mail-body').value;
+
+  const id = `JN-2026-0${seq++}`;
+  const logTitles = [`Quote sent to ${clientById(cotDraft.clientId).name}`];
+  if(offerState.pdfReady) logTitles.push(`PDF adjunto: ${offerState.pdfName}`);
+  const exp = mkExp(id, cotDraft.ship, cotDraft.clientId, cotDraft.eta||'—','—','—',
+    cotDraft.work.join(', ')||'Por definir', 'Cotizado',
+    {cot:true}, logTitles, 0,
+    {imo:cotDraft.imo, loa:cotDraft.loa, draft:cotDraft.draft});
+  if(offerState.pdfReady) exp.docs.servicios.push(offerState.pdfName);
+  EXPEDIENTES.unshift(exp);
+
+  toast(`Oferta enviada a ${to}${offerState.pdfReady?' con PDF adjunto':''} — Expediente ${id} creado en Pizarra de servicios (Cotizado)`);
+  offerState=null; cotDraft={ship:'',eta:'',imo:'',work:[],clientId:'',loa:'',draft:''};
+  renderView();
+}
+
+function wireCotizador(){ /* inputs are read directly on submit; nothing to pre-wire */ }
+
+/* ==================================================================
+   2 & 3. PIZARRA / REGISTRO (tablero compartido)
+   ================================================================== */
+let boardFilters = {pizarra:{q:'',status:'',client:''}, registro:{q:'',status:'',client:''}};
+
+function hasAlarm(e){
+  return FLUJO_STEPS.some(s=>s.alarm && e.flujo[s.key] && !e.flujo[s.key].done);
+}
+function isUpcoming(e){
+  const d = new Date(e.eta);
+  if(isNaN(d)) return false;
+  const diffDays = (d - new Date()) / 86400000;
+  return diffDays >= 0 && diffDays <= 3;
+}
+
+function viewBoard(statuses, mode){
+  const f = boardFilters[mode];
+  const scopeRows = EXPEDIENTES.filter(e=>statuses.includes(e.status));
+  const rows = scopeRows
+    .filter(e=> !f.q || (e.ship.toLowerCase().includes(f.q.toLowerCase()) || e.id.toLowerCase().includes(f.q.toLowerCase()) || clientById(e.clientId).name.toLowerCase().includes(f.q.toLowerCase())))
+    .filter(e=> !f.status || e.status===f.status)
+    .filter(e=> !f.client || e.clientId===f.client);
+
+  const showETBETS = mode==='pizarra';
+  const nAlarm = scopeRows.filter(hasAlarm).length;
+  const nUpcoming = scopeRows.filter(isUpcoming).length;
+  return `
+  <div class="mini-kpi-row">
+    <div class="card mini-kpi"><div><div class="lbl">${mode==='pizarra'?'Servicios activos':'Expedientes'}</div><div class="val">${scopeRows.length}</div></div></div>
+    <div class="card mini-kpi ${nAlarm?'alarm':''}"><div><div class="lbl">Con alarma</div><div class="val">${nAlarm}</div></div></div>
+    <div class="card mini-kpi"><div><div class="lbl">Próximos ETA (72h)</div><div class="val">${nUpcoming}</div></div></div>
+  </div>
+  <div class="toolbar">
+    <input type="text" id="bf-q-${mode}" placeholder="Buscar barco, cliente o JN..." value="${f.q}">
+    <select id="bf-status-${mode}">
+      <option value="">Todos los estados</option>
+      ${statuses.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('')}
+    </select>
+    <select id="bf-client-${mode}">
+      <option value="">Todos los clientes</option>
+      ${CLIENTES.map(c=>`<option value="${c.id}" ${f.client===c.id?'selected':''}>${c.name}</option>`).join('')}
+    </select>
+    <button class="btn btn-ghost" onclick="clearBoardFilters('${mode}')">Limpiar</button>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <table class="data">
+      <thead><tr>
+        <th>Expediente</th><th>Barco</th><th>Estado</th><th>ETA</th>
+        ${showETBETS?'<th>ETB</th><th>ETS</th>':''}
+        <th>Trabajo</th>${!showETBETS?'<th>Importe</th>':''}<th>Última acción</th>
+      </tr></thead>
+      <tbody>
+        ${rows.length? rows.map(e=>`
+          <tr onclick="openExp('${e.id}')">
+            <td class="mono">${hasAlarm(e)?'<span class="alarm-row-tag" title="Gestión con alarma pendiente">⚠</span>':''}${e.id}</td>
+            <td><b>${e.ship}</b><div class="muted small">${clientById(e.clientId).name}</div></td>
+            <td><span class="badge ${badgeClass(e.status)}"><span class="pill-dot"></span>${e.status}</span></td>
+            <td class="mono small">${e.eta}</td>
+            ${showETBETS?`<td class="mono small">${e.etb}</td><td class="mono small">${e.ets}</td>`:''}
+            <td class="small">${e.work}</td>
+            ${!showETBETS?`<td class="mono small">${e.price?('€ '+e.price.toLocaleString('es-ES')):'—'}</td>`:''}
+            <td class="small muted">${e.lastAction}<div class="mono" style="font-size:10.5px;">${e.lastActionDate}</div></td>
+          </tr>`).join('') : `<tr><td colspan="8"><div class="empty">Sin expedientes que coincidan con el filtro.</div></td></tr>`}
+      </tbody>
+    </table>
+  </div>`;
+}
+function wireBoardFilters(mode){
+  const q=document.getElementById('bf-q-'+mode), st=document.getElementById('bf-status-'+mode), cl=document.getElementById('bf-client-'+mode);
+  q.oninput=()=>{boardFilters[mode].q=q.value; patchBoard(mode);};
+  st.onchange=()=>{boardFilters[mode].status=st.value; patchBoard(mode);};
+  cl.onchange=()=>{boardFilters[mode].client=cl.value; patchBoard(mode);};
+}
+function patchBoard(mode){
+  const statuses = mode==='pizarra'?PIZARRA_STATUSES:REGISTRO_STATUSES;
+  document.getElementById('view-root').innerHTML = viewBoard(statuses, mode);
+  wireBoardFilters(mode);
+}
+function clearBoardFilters(mode){ boardFilters[mode]={q:'',status:'',client:''}; patchBoard(mode); }
+
+/* ---------------- Modal: ficha de expediente ---------------- */
+function openExp(id){
+  modalExpId=id; activeStepKey=null;
+  document.getElementById('modal-root').innerHTML = renderModal();
+}
+function closeModal(){ modalExpId=null; document.getElementById('modal-root').innerHTML=''; renderView(); }
+
+function nextStepKey(e){
+  const s = FLUJO_STEPS.find(s=>!e.flujo[s.key].done);
+  return s ? s.key : null;
+}
+
+function renderModal(){
+  const e = EXPEDIENTES.find(x=>x.id===modalExpId);
+  if(!e) return '';
+  const c = clientById(e.clientId);
+  const doneCount = FLUJO_STEPS.filter(s=>e.flujo[s.key].done).length;
+  const nextKey = nextStepKey(e);
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+        <div>
+          <h3>Expediente ${e.id} · ${e.ship}</h3>
+          <div class="sub">${c.name} · ETA ${e.eta} · ETS ${e.ets==='—'?'Pendiente':e.ets} · ${e.status}</div>
+          <div style="margin-top:14px;"><span class="badge ${badgeClass(e.status)}"><span class="pill-dot"></span>${e.status}</span></div>
+        </div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding-right:44px;">
+          <select id="status-select-top" onchange="document.getElementById('status-select').value=this.value;">
+            ${[...PIZARRA_STATUSES,...REGISTRO_STATUSES].map(s=>`<option ${e.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('status-select').value=document.getElementById('status-select-top').value; saveStatus();">Cambiar estado</button>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:20px;align-items:start;">
+        <div class="card" style="padding:20px;">
+          <div class="section-title" style="margin-top:0;">Resumen operativo</div>
+          <div class="grid2">
+            <div><label class="field-label">Servicios</label><div class="small">${e.work}</div></div>
+            <div><label class="field-label">Permiso</label><div class="small">${e.flujo.permisos.done?'Aprobado':'Pendiente'}</div></div>
+            <div><label class="field-label">IMO</label><div class="mono small">${e.imo||'—'}</div></div>
+            <div><label class="field-label">LoA / Draft</label><div class="mono small">${e.loa||'—'} m / ${e.draft||'—'} m</div></div>
+            <div><label class="field-label">ETA / ETS</label><div class="mono small">${e.eta} / ${e.ets}</div></div>
+            <div><label class="field-label">Cliente</label><div class="small">${c.name}</div></div>
+          </div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <div class="section-title" style="margin-top:0;display:flex;justify-content:space-between;">Posición AIS <span class="small muted" style="font-weight:500;">VesselFinder</span></div>
+          <div style="background:#f2eee1;border-radius:8px;height:90px;display:flex;align-items:center;justify-content:center;color:#9a927c;font-size:12px;">Vista AIS embebida (simulada)</div>
+        </div>
+      </div>
+
+      <div class="section-title">Flujo operativo del expediente <span class="count">${doneCount}/${FLUJO_STEPS.length} gestiones marcadas</span></div>
+      <p class="small muted" style="margin-top:-6px;">Puedes marcar o desmarcar manualmente porque el orden real puede variar. La tarjeta resaltada es el siguiente paso recomendado.</p>
+      <div class="flujo-grid">
+        ${FLUJO_STEPS.map(s=>renderStepCard(e,s,s.key===nextKey)).join('')}
+      </div>
+      <div id="action-panel-holder">${activeStepKey ? renderStepPanel(e, FLUJO_STEPS.find(s=>s.key===activeStepKey)) : ''}</div>
+
+      <div class="grid2" style="margin-top:26px;align-items:start;">
+        <div class="card" style="padding:20px;">
+          <div class="section-title" style="margin-top:0;">📁 Documentación del expediente</div>
+          ${renderDocTabs(e)}
+        </div>
+        <div class="card" style="padding:20px;">
+          <div class="section-title" style="margin-top:0;">Cambiar estado</div>
+          <div class="field">
+            <select id="status-select">
+              ${[...PIZARRA_STATUSES,...REGISTRO_STATUSES].map(s=>`<option ${e.status===s?'selected':''}>${s}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="saveStatus()">Guardar estado</button>
+
+          <div class="section-title">Log</div>
+          <div>
+            ${e.log.slice().reverse().map(l=>`<div class="logrow"><span>${l.text}</span><span class="who">${l.who} · ${l.when}</span></div>`).join('') || '<div class="empty">Sin eventos.</div>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderStepCard(e, s, isNext){
+  const st = e.flujo[s.key];
+  const cls = st.rejected ? 'rejected' : (st.done ? 'done' : '');
+  const sel = activeStepKey===s.key ? 'active-sel' : '';
+  const nextCls = (isNext && !st.done) ? 'next-step' : '';
+  let alarm='';
+  if(s.alarm && !st.done) alarm = `<div class="alarm-tag">⚠ ALARMA · sin completar</div>`;
+  return `
+    <div class="step ${cls} ${sel} ${nextCls}" onclick="selectStep('${s.key}')">
+      ${nextCls?'<div class="next-step-tag">SIGUIENTE PASO</div>':''}
+      <div class="step-top">
+        <div class="check">${st.done ? (st.rejected?'✕':'✓') : ''}</div>
+        <div class="step-title">${s.title}</div>
+      </div>
+      <div class="step-desc">${s.desc}</div>
+      ${alarm}
+    </div>`;
+}
+
+function selectStep(key){
+  activeStepKey = (activeStepKey===key) ? null : key;
+  rerenderModalKeepScroll();
+}
+
+function renderStepPanel(e, s){
+  if(s.type==='auto'){
+    return `<div class="action-panel"><h4>${s.title}</h4><p class="small muted">Esta gestión se marca automáticamente al enviar la oferta desde Cotizaciones. Ábrela allí si necesitas modificar la oferta.</p>
+      <button class="btn btn-ghost btn-sm" onclick="goToCotizadorFromModal()">Ir a Cotizaciones</button></div>`;
+  }
+  if(s.type==='accept'){
+    const st=e.flujo.accept;
+    return `<div class="action-panel"><h4>Aceptación de la oferta</h4>
+      <p class="small muted">Registra la decisión del cliente sobre la oferta enviada.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary btn-sm" onclick="acceptOffer(true)">✓ Aceptada</button>
+        <button class="btn btn-danger btn-sm" onclick="acceptOffer(false)">✕ Rechazada</button>
+      </div>
+      ${st.rejected? `<div class="field" style="margin-top:12px;"><label class="field-label">Motivo del rechazo</label><textarea id="reject-motivo" rows="2">${st.motivo||''}</textarea><button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="saveRejectMotivo()">Guardar motivo</button></div>`:''}
+    </div>`;
+  }
+  if(s.type==='send'){
+    const c = clientById(e.clientId);
+    const toLabel = {capitan:'Capitán / Master', agente:'Agencia consignataria', capitania:'Capitanía Marítima'}[s.to];
+    const toEmail = s.to==='capitan' ? '' : (s.to==='agente' ? AGENTES[0].email : PORTUARIAS[1].email);
+    const subject = defaultSubject(s,e);
+    return `<div class="action-panel">
+      <h4>${s.title} · se abre un mensaje listo para enviar directamente</h4>
+      <div class="composer">
+        <div class="composer-head"><span><span class="dot"></span>Nuevo mensaje — ${toLabel}</span><span id="send-status-${s.key}"></span></div>
+        <div class="composer-body">
+          <div class="composer-row"><label>Para</label><input type="email" id="send-to" value="${toEmail}" placeholder="email@ejemplo.com"></div>
+          <div class="composer-row"><label>Asunto</label><input type="text" id="send-subject" value="${subject}"></div>
+          ${s.attach?`<div style="padding-top:10px;"><span class="attach-chip">📎 ${s.attach}</span></div>`:''}
+          <textarea id="send-body" rows="5">${defaultTemplate(s,e,c)}</textarea>
+        </div>
+        <div class="composer-foot">
+          <span class="small muted">De: ops.algeciras@scampnetwork.com</span>
+          <button class="btn btn-primary btn-sm" onclick="doSend('${s.key}')">✉ Enviar al ${s.to==='capitan'?'capitán':(s.to==='agente'?'agente':'destinatario')}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  if(s.type==='upload'){
+    return `<div class="action-panel"><h4>${s.title}</h4>
+      <p class="small muted">Arrastra o selecciona los documentos recibidos del Master.</p>
+      <input type="file" id="upload-file" multiple style="margin-bottom:10px;">
+      <br><button class="btn btn-primary btn-sm" onclick="doUpload()">Subir a documentación</button>
+    </div>`;
+  }
+  if(s.type==='confirm'){
+    return `<div class="action-panel"><h4>${s.title}</h4>
+      <p class="small muted">Esta gestión se realiza fuera del sistema; confírmala aquí una vez completada.</p>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" id="confirm-box" style="width:auto;"> Confirmo que se ha realizado</label>
+      <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="doConfirm('${s.key}')">Guardar</button>
+    </div>`;
+  }
+  if(s.type==='ops'){
+    return `<div class="action-panel"><h4>${s.title}</h4>
+      <div class="field"><label class="field-label">${s.label}</label><input type="time" id="ops-time" value="08:30"></div>
+      <button class="btn btn-primary btn-sm" onclick="doOps('${s.key}')">Registrar y avisar al cliente</button>
+    </div>`;
+  }
+  if(s.type==='report'){
+    return `<div class="action-panel"><h4>Final report</h4>
+      <div class="field"><label class="field-label">Texto OCR del reporte de buzos</label>
+        <textarea id="report-ocr" rows="3" placeholder="Pega aquí notas de los buzos...">Dive report: hull cleaning completed both sides, propeller polished, no damage observed. Duration 3h20.</textarea>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="genReport()">Analizar OCR y generar informe</button>
+      <div id="report-preview"></div>
+    </div>`;
+  }
+  if(s.type==='invoice'){
+    const c = clientById(e.clientId);
+    const amount = e.price || estimateInvoice(e,c);
+    return `<div class="action-panel"><h4>Factura</h4>
+      <div class="grid2">
+        <div class="field"><label class="field-label">Calado a la llegada (m)</label><input type="text" id="inv-draft" value="${e.draft||'—'}"></div>
+        <div class="field"><label class="field-label">Horas de servicio</label><input type="text" id="inv-hours" value="3.3"></div>
+      </div>
+      <div class="field"><label class="field-label">Concepto / detalle</label><textarea id="inv-detail" rows="3">${e.work} — M/V ${e.ship} — ${e.eta}</textarea></div>
+      <div class="field"><label class="field-label">Importe total (€)</label><input type="number" id="inv-amount" value="${amount}"></div>
+      <button class="btn btn-primary btn-sm" onclick="doInvoice()">Guardar y facturar</button>
+    </div>`;
+  }
+  return '';
+}
+
+function defaultSubject(s,e){
+  const map={
+    prearrival_master:`Pre-Arrival Forms — M/V ${e.ship} — Algeciras`,
+    mail_agencia:`Nomination SCAMP — M/V ${e.ship}`,
+    rp_agente:`RP Request — M/V ${e.ship} — Algeciras`,
+    notif_af:`Notification & Antifouling Cert. — M/V ${e.ship}`,
+    arrival_instr:`Arrival Instructions — M/V ${e.ship} — Algeciras`,
+  };
+  return map[s.key] || `SCAMP — M/V ${e.ship}`;
+}
+function defaultTemplate(s,e,c){
+  if(s.key==='prearrival_master') return `Dear Master,\n\nPlease find attached pre-arrival forms for the underwater service scheduled during your call at Algeciras (ETA ${e.eta}). Kindly complete and return.\n\nSCAMP Operations`;
+  if(s.key==='mail_agencia') return `Dear Agency,\n\nPlease be informed SCAMP has been nominated for underwater services on M/V ${e.ship} (ETA ${e.eta}). RP to follow shortly.\n\nSCAMP Operations`;
+  if(s.key==='rp_agente') return `Dear Agency,\n\nPlease find attached Request for Permission (RP) for M/V ${e.ship}. Kindly process with Port Authority.\n\nSCAMP Operations`;
+  if(s.key==='notif_af') return `Dear Capitanía,\n\nNotification of underwater works on M/V ${e.ship} (${e.eta}). ${e.work.includes('Hull')?'Antifouling certificate attached as hull cleaning is included.':''}\n\nSCAMP Operations`;
+  if(s.key==='arrival_instr') return `Dear Master,\n\nArrival instructions for the diving team ahead of works on M/V ${e.ship}. Please ensure gangway/pilot ladder access is available.\n\nSCAMP Operations`;
+  return `Dear Sirs,\n\nPlease find the requested information regarding M/V ${e.ship}.\n\nSCAMP Operations`;
+}
+function estimateInvoice(e,c){
+  const base = e.work.includes('Hull') ? 8200 : e.work.includes('Propeller') ? 1500 : 1950;
+  return base;
+}
+
+/* ---- step actions ---- */
+function curExp(){ return EXPEDIENTES.find(x=>x.id===modalExpId); }
+function addLog(e,text){ e.log.push({text, who:'M. Ruiz', when: new Date().toISOString().slice(0,16).replace('T',' ')}); e.lastAction=text; e.lastActionDate=e.log[e.log.length-1].when; }
+function refreshModal(){ rerenderModalKeepScroll(); renderView(); }
+
+function rerenderModalKeepScroll(){
+  const prevOverlay = document.querySelector('#modal-root .overlay');
+  const prevScroll = prevOverlay ? prevOverlay.scrollTop : 0;
+  document.getElementById('modal-root').innerHTML = renderModal();
+  const newOverlay = document.querySelector('#modal-root .overlay');
+  if(!newOverlay) return;
+  if(activeStepKey){
+    // a step panel is open — scroll it into view so it's never hidden off-screen
+    const panel = document.getElementById('action-panel-holder');
+    if(panel) panel.scrollIntoView({block:'center'});
+  } else {
+    newOverlay.scrollTop = prevScroll;
+  }
+}
+
+function acceptOffer(accepted){
+  const e=curExp();
+  if(accepted){
+    e.flujo.accept={done:true};
+    e.status='Nominado';
+    addLog(e,'Offer accepted by client');
+    toast('Oferta aceptada — expediente pasa a Nominado');
+    activeStepKey=null;
+  } else {
+    e.flujo.accept={done:true, rejected:true, motivo:''};
+    e.status='No aceptado';
+    addLog(e,'Offer rejected by client');
+    toast('Oferta rechazada — expediente movido a Registro operativo');
+  }
+  refreshModal();
+}
+function saveRejectMotivo(){
+  const e=curExp();
+  e.flujo.accept.motivo = document.getElementById('reject-motivo').value;
+  addLog(e,'Motivo de rechazo registrado');
+  toast('Motivo guardado');
+  refreshModal();
+}
+function doSend(key){
+  const e=curExp();
+  const to=document.getElementById('send-to').value;
+  const subject=document.getElementById('send-subject')?document.getElementById('send-subject').value:'';
+  if(!to){ toast('Añade un destinatario antes de enviar'); return; }
+  const statusEl=document.getElementById('send-status-'+key);
+  if(statusEl) statusEl.innerHTML = `<span class="sending-flash">Enviando…</span>`;
+  setTimeout(()=>{
+    e.flujo[key]={done:true};
+    const step=FLUJO_STEPS.find(s=>s.key===key);
+    addLog(e, `${step.title} sent to ${to}${subject?` — "${subject}"`:''}`);
+    toast(`✉ ${step.title} enviado a ${to}`);
+    activeStepKey=null;
+    refreshModal();
+  }, 550);
+}
+function doUpload(){
+  const e=curExp();
+  const files=document.getElementById('upload-file').files;
+  const names = files.length ? Array.from(files).map(f=>f.name) : ['Prearrival_docs.pdf'];
+  e.docs.servicios.push(...names);
+  e.flujo.prearrival_recibido={done:true};
+  addLog(e, `Prearrival recibido (${names.join(', ')})`);
+  toast('Documentos subidos al repositorio del expediente');
+  activeStepKey=null;
+  refreshModal();
+}
+function doConfirm(key){
+  const e=curExp();
+  const box=document.getElementById('confirm-box');
+  if(!box.checked){ toast('Marca la casilla de confirmación'); return; }
+  e.flujo[key]={done:true};
+  const step=FLUJO_STEPS.find(s=>s.key===key);
+  addLog(e, `${step.title} confirmed`);
+  toast(`${step.title} marcado como completado`);
+  activeStepKey=null;
+  refreshModal();
+}
+function doOps(key){
+  const e=curExp();
+  const time=document.getElementById('ops-time').value;
+  e.flujo[key]={done:true, time};
+  if(key==='commenced'){ e.status='En operación'; addLog(e, `Commenced ops at ${time} — client notified`); }
+  if(key==='completed'){ e.status='Salido'; addLog(e, `Completed ops at ${time} — client notified`); }
+  toast('Registrado y aviso enviado al cliente');
+  activeStepKey=null;
+  refreshModal();
+}
+function genReport(){
+  const text=document.getElementById('report-ocr').value;
+  const c=clientById(curExp().clientId);
+  const report = `SCAMP · Diver Job Report\nBuque: ${curExp().ship}\nCliente: ${c.name}\n\nResumen: ${text}\n\n[Editable — el equipo de oficina puede completar detalles antes del envío final]`;
+  document.getElementById('report-preview').innerHTML = `
+    <div class="field" style="margin-top:12px;"><label class="field-label">Informe final (editable)</label><textarea id="final-report-text" rows="6">${report}</textarea></div>
+    <button class="btn btn-primary btn-sm" onclick="sendFinalReport()">Enviar informe al cliente</button>`;
+}
+function sendFinalReport(){
+  const e=curExp();
+  e.docs.jobReports.push(`JR_${e.ship.replace(/\s+/g,'')}.pdf`);
+  e.flujo.final_report={done:true};
+  e.status='Reporte Efectuado';
+  addLog(e,'Final report sent to client');
+  toast('Informe final enviado al cliente');
+  activeStepKey=null;
+  refreshModal();
+}
+function doInvoice(){
+  const e=curExp();
+  const amount=parseFloat(document.getElementById('inv-amount').value)||0;
+  e.flujo.factura={done:true};
+  e.price=amount;
+  e.status='Facturado';
+  addLog(e,`Invoice issued — € ${amount.toLocaleString('es-ES')}`);
+  toast('Factura generada — expediente movido a Registro operativo');
+  activeStepKey=null;
+  refreshModal();
+}
+function saveStatus(){
+  const e=curExp();
+  e.status = document.getElementById('status-select').value;
+  addLog(e, `Status manually set to ${e.status}`);
+  toast('Estado actualizado');
+  refreshModal();
+}
+function goToCotizadorFromModal(){ closeModal(); goTo('cotizaciones'); }
+
+function renderDocTabs(e){
+  window.__docTabActive = window.__docTabActive || 'jobReports';
+  const tabs=[['jobReports','Job Reports'],['permisos','Permisos'],['servicios','Servicios Doc.']];
+  const active=window.__docTabActive;
+  const list=e.docs[active];
+  return `
+    <div class="doctabs">
+      ${tabs.map(([k,l])=>`<div class="doctab ${active===k?'active':''}" onclick="setDocTab('${k}')">${l} (${e.docs[k].length})</div>`).join('')}
+    </div>
+    ${list.length ? list.map(d=>`<div class="docrow"><span>📄 ${d}</span><span class="muted">añadido</span></div>`).join('') : `<div class="doclist">Sin documentos en esta categoría.</div>`}
+    <div class="field" style="margin-top:12px;"><input type="text" id="doc-name" placeholder="Nombre archivo ej: JR_${e.ship.replace(/\s+/g,'')}.pdf"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addDoc()">+ Adjuntar</button>
+  `;
+}
+function setDocTab(k){ window.__docTabActive=k; rerenderModalKeepScroll(); }
+function addDoc(){
+  const e=curExp();
+  const name=document.getElementById('doc-name').value || 'documento.pdf';
+  e.docs[window.__docTabActive||'jobReports'].push(name);
+  toast('Documento adjuntado');
+  refreshModal();
+}
+
+/* ==================================================================
+   4. MOTOR DE ENTIDADES
+   ================================================================== */
+let entTab='clientes';
+let entClientId='alfa';
+let entClientSub='principales';
+
+function viewEntidades(){
+  return `
+  <div class="tabs-row">
+    <div class="tabbtn ${entTab==='clientes'?'active':''}" onclick="setEntTab('clientes')">Clientes</div>
+    <div class="tabbtn ${entTab==='agentes'?'active':''}" onclick="setEntTab('agentes')">Agentes</div>
+    <div class="tabbtn ${entTab==='portuarias'?'active':''}" onclick="setEntTab('portuarias')">Entidades portuarias</div>
+  </div>
+  <div id="ent-body">${renderEntBody()}</div>`;
+}
+function setEntTab(t){ entTab=t; document.getElementById('ent-body').innerHTML = renderEntBody(); wireEntidades(); }
+function wireEntidades(){ /* delegated inline handlers, nothing extra to wire */ }
+
+function renderEntBody(){
+  if(entTab==='clientes') return renderClientesTab();
+  if(entTab==='agentes') return renderSimpleEntity(AGENTES,'Agentes consignatarios de Algeciras. Usados para automatizar el envío de mensajes en el flujo operativo.');
+  if(entTab==='portuarias') return renderSimpleEntity(PORTUARIAS,'Autoridad Portuaria y Capitanía Marítima — contactos usados en notificaciones automáticas.');
+}
+
+function renderClientesTab(){
+  const c = clientById(entClientId);
+  const subs=[['principales','Datos principales'],['tarifas','Tarifas acordadas'],['fixing','Fixing rate'],['cuentas','Statement of accounts']];
+  return `
+  <div class="entity-layout">
+    <div class="entity-list card">
+      ${CLIENTES.map(cl=>`<div class="entity-row ${cl.id===entClientId?'active':''}" onclick="setEntClient('${cl.id}')">${cl.name}</div>`).join('')}
+    </div>
+    <div class="card" style="padding:22px;">
+      <h3 style="margin:0 0 2px;">${c.name}</h3>
+      <div class="small muted" style="margin-bottom:16px;">${c.vat}</div>
+      <div class="subtabs">
+        ${subs.map(([k,l])=>`<div class="subtab ${entClientSub===k?'active':''}" onclick="setEntSub('${k}')">${l}</div>`).join('')}
+      </div>
+      ${renderClientSub(c)}
+    </div>
+  </div>`;
+}
+function setEntClient(id){ entClientId=id; document.getElementById('ent-body').innerHTML=renderEntBody(); }
+function setEntSub(k){ entClientSub=k; document.getElementById('ent-body').innerHTML=renderEntBody(); }
+
+function renderClientSub(c){
+  if(entClientSub==='principales'){
+    return `
+    <div class="grid2">
+      <div class="field"><label class="field-label">Dirección</label><div class="small">${c.address}</div></div>
+      <div class="field"><label class="field-label">VAT Number</label><div class="small mono">${c.vat}</div></div>
+      <div class="field"><label class="field-label">Teléfono de contacto</label><div class="small">${c.phone}</div></div>
+      <div class="field"><label class="field-label">Email principal</label><div class="small">${c.email}</div></div>
+      <div class="field"><label class="field-label">Email accounts</label><div class="small">${c.emailAccounts.join(', ')}</div></div>
+      <div class="field"><label class="field-label">Datos bancarios</label><div class="small">${c.bank}</div></div>
+      <div class="field"><label class="field-label">Condiciones de crédito</label><div class="small">${c.credit}</div></div>
+    </div>`;
+  }
+  if(entClientSub==='tarifas'){
+    return `
+    <table class="data" style="margin-bottom:14px;">
+      <thead><tr><th>Concepto</th><th>Precio acordado</th></tr></thead>
+      <tbody>${c.rates.map(r=>`<tr><td>${r.concepto}</td><td class="mono">${r.precio}</td></tr>`).join('')}</tbody>
+    </table>
+    <label class="field-label">Notas / abonos / descuentos</label>
+    <div class="small" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:12px;">${c.notes}</div>`;
+  }
+  if(entClientSub==='fixing'){
+    const pct = Math.round(c.fixing.cerradas/c.fixing.pedidas*100);
+    return `
+    <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card kpi"><div class="lbl">Cotizaciones pedidas</div><div class="val">${c.fixing.pedidas}</div></div>
+      <div class="card kpi"><div class="lbl">Cotizaciones cerradas</div><div class="val">${c.fixing.cerradas}</div></div>
+      <div class="card kpi"><div class="lbl">Fixing rate</div><div class="val">${pct}%</div><div class="delta ${pct>=70?'up':'down'}">${pct>=70?'Buena conversión':'Revisar tarifa / respuesta'}</div></div>
+    </div>`;
+  }
+  if(entClientSub==='cuentas'){
+    const total = c.aging.d30+c.aging.d60+c.aging.d90+c.aging.d90p;
+    return `
+    <table class="data aging-table">
+      <thead><tr><th>Rango</th><th>0-30 días</th><th>31-60 días</th><th>61-90 días</th><th>+90 días</th><th>Total</th></tr></thead>
+      <tbody><tr>
+        <td>Importe vencido</td>
+        <td class="mono">€ ${c.aging.d30.toLocaleString('es-ES')}</td>
+        <td class="mono">€ ${c.aging.d60.toLocaleString('es-ES')}</td>
+        <td class="mono">€ ${c.aging.d90.toLocaleString('es-ES')}</td>
+        <td class="mono" style="color:${c.aging.d90p>0?'var(--red-600)':'inherit'}">€ ${c.aging.d90p.toLocaleString('es-ES')}</td>
+        <td class="mono"><b>€ ${total.toLocaleString('es-ES')}</b></td>
+      </tr></tbody>
+    </table>`;
+  }
+}
+function renderSimpleEntity(list, caption){
+  return `
+  <p class="small muted">${caption}</p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="data">
+      <thead><tr><th>Entidad</th><th>Contacto / Departamento</th><th>Email</th><th>Teléfono</th></tr></thead>
+      <tbody>
+        ${list.map(a=>`<tr><td><b>${a.name}</b></td><td>${a.contact||a.dept}</td><td>${a.email}</td><td class="mono">${a.phone}</td></tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ==================================================================
+   5. DASHBOARD MANAGEMENT
+   ================================================================== */
+function viewDashboard(){
+  const totalFacturado = EXPEDIENTES.filter(e=>e.status==='Facturado').reduce((s,e)=>s+e.price,0);
+  const nExp = EXPEDIENTES.length;
+  const nominados = EXPEDIENTES.filter(e=>PIZARRA_STATUSES.includes(e.status)||e.status==='Facturado').length;
+  const cotizados = EXPEDIENTES.filter(e=>e.flujo.cot.done).length;
+  const conv = Math.round(nominados/cotizados*100);
+  const periods=[['mes','Mes'],['trimestre','Trimestre'],['año','Año']];
+  return `
+  <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+    <div class="tabs-row" style="margin-bottom:0;">
+      ${periods.map(([k,l])=>`<div class="tabbtn ${dashPeriod===k?'active':''}" onclick="setDashPeriod('${k}')">${l}</div>`).join('')}
+    </div>
+  </div>
+  <div class="kpi-row">
+    <div class="card kpi"><div class="lbl">Facturado (${dashPeriod})</div><div class="val">€ ${totalFacturado.toLocaleString('es-ES')}</div><div class="delta up">+12% vs. periodo anterior</div></div>
+    <div class="card kpi"><div class="lbl">Expedientes activos</div><div class="val">${nExp}</div><div class="delta up">+3 esta semana</div></div>
+    <div class="card kpi"><div class="lbl">Ticket medio</div><div class="val">€ ${Math.round(EXPEDIENTES.reduce((s,e)=>s+(e.price||0),0)/EXPEDIENTES.filter(e=>e.price).length).toLocaleString('es-ES')}</div><div class="delta down">-4% vs. periodo anterior</div></div>
+    <div class="card kpi"><div class="lbl">Conversión cotización→nominado</div><div class="val">${conv}%</div><div class="delta ${conv>=60?'up':'down'}">${conv>=60?'En objetivo':'Bajo objetivo'}</div>
+      ${conv<60?`<button class="btn btn-blue btn-sm" style="margin-top:9px;" onclick="goTo('cotizaciones')">Revisar cotizaciones →</button>`:''}
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="card chart-card">
+      <h4>Margen bruto mensual — comparativa interanual</h4>
+      <div class="cap">2026 vs. 2025 (€ miles)</div>
+      <canvas id="chart-yoy"></canvas>
+    </div>
+    <div class="card chart-card">
+      <h4>Margen bruto por cliente</h4>
+      <div class="cap">Mes en curso</div>
+      <canvas id="chart-client"></canvas>
+    </div>
+  </div>
+
+  <div class="card chart-card">
+    <h4>Margen bruto por expediente</h4>
+    <div class="cap">Últimos expedientes facturados</div>
+    <canvas id="chart-exp"></canvas>
+  </div>`;
+}
+let dashPeriod='mes';
+function setDashPeriod(k){ dashPeriod=k; document.getElementById('view-root').innerHTML=viewDashboard(); wireDashboard(); }
+function wireDashboard(){
+  const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const y2026=[38,41,45,52,49,58,61,0,0,0,0,0];
+  const y2025=[31,34,37,44,42,48,53,55,50,58,62,66];
+  drawLineChart('chart-yoy', months, [
+    {label:'2026', data:y2026, color:'#00819e', fill:true},
+    {label:'2025', data:y2025, color:'#c7d0dc', dashed:true},
+  ]);
+  drawBarChart('chart-client', CLIENTES.map(c=>c.name.split(' ')[0]), [9200,6400,4100,7300], '#00819e');
+  const billed = EXPEDIENTES.filter(e=>e.price);
+  drawHBarChart('chart-exp', billed.map(e=>e.id), billed.map(e=>Math.round(e.price*0.42)), '#2ba3c0');
+}
+
+/* ---- lightweight, dependency-free canvas charts (no CDN required) ---- */
+function setupCanvas(id, cssHeight){
+  const canvas = document.getElementById(id);
+  const wrap = canvas.parentElement;
+  const cssWidth = wrap.clientWidth;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = cssWidth * dpr;
+  canvas.height = cssHeight * dpr;
+  canvas.style.width = cssWidth + 'px';
+  canvas.style.height = cssHeight + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return {ctx, w: cssWidth, h: cssHeight};
+}
+function niceMax(v){ const p=Math.pow(10, Math.floor(Math.log10(v||1))); return Math.ceil(v/(p/2))*(p/2) || 10; }
+
+function drawLineChart(id, labels, series){
+  const {ctx, w, h} = setupCanvas(id, 190);
+  const padL=34, padR=10, padT=14, padB=26;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const max = niceMax(Math.max(...series.flatMap(s=>s.data)));
+  ctx.clearRect(0,0,w,h);
+  ctx.font='10.5px ' + getComputedStyle(document.body).fontFamily;
+  ctx.fillStyle='#94a3b8'; ctx.strokeStyle='#eef2f6'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y = padT + plotH - (plotH*i/4);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    ctx.fillText(Math.round(max*i/4), 2, y+3);
+  }
+  const stepX = plotW/(labels.length-1);
+  labels.forEach((l,i)=>{ if(i%2===0) ctx.fillText(l, padL+stepX*i-8, h-8); });
+  series.forEach(s=>{
+    ctx.beginPath();
+    s.data.forEach((v,i)=>{
+      const x=padL+stepX*i, y=padT+plotH-(v/max*plotH);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=s.color; ctx.lineWidth=2.2;
+    if(s.dashed) ctx.setLineDash([5,4]); else ctx.setLineDash([]);
+    ctx.stroke(); ctx.setLineDash([]);
+    if(s.fill){
+      ctx.lineTo(padL+stepX*(s.data.length-1), padT+plotH);
+      ctx.lineTo(padL, padT+plotH);
+      ctx.closePath();
+      ctx.fillStyle = s.color+'22';
+      ctx.fill();
+    }
+  });
+  // legend
+  let lx = padL;
+  series.forEach(s=>{
+    ctx.fillStyle=s.color; ctx.fillRect(lx, 2, 8, 8);
+    ctx.fillStyle='#374255'; ctx.fillText(s.label, lx+11, 10);
+    lx += ctx.measureText(s.label).width + 34;
+  });
+}
+function drawBarChart(id, labels, data, color){
+  const {ctx, w, h} = setupCanvas(id, 190);
+  const padL=34, padR=10, padT=10, padB=26;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const max = niceMax(Math.max(...data));
+  ctx.clearRect(0,0,w,h);
+  ctx.font='10.5px ' + getComputedStyle(document.body).fontFamily;
+  ctx.strokeStyle='#eef2f6';
+  for(let i=0;i<=4;i++){
+    const y = padT + plotH - (plotH*i/4);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    ctx.fillStyle='#94a3b8'; ctx.fillText(Math.round(max*i/4), 2, y+3);
+  }
+  const bw = plotW/data.length*0.55;
+  data.forEach((v,i)=>{
+    const cx = padL + plotW*(i+0.5)/data.length;
+    const bh = v/max*plotH;
+    ctx.fillStyle=color;
+    roundRectTop(ctx, cx-bw/2, padT+plotH-bh, bw, bh, 5);
+    ctx.fillStyle='#374255';
+    ctx.fillText(labels[i], cx - ctx.measureText(labels[i]).width/2, h-8);
+  });
+}
+function drawHBarChart(id, labels, data, color){
+  const {ctx, w, h} = setupCanvas(id, Math.max(90, labels.length*30));
+  const padL=64, padR=46, padT=8, padB=8;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const max = niceMax(Math.max(...data));
+  ctx.clearRect(0,0,w,h);
+  ctx.font='11px ' + getComputedStyle(document.body).fontFamily;
+  const bh = plotH/data.length*0.55;
+  data.forEach((v,i)=>{
+    const cy = padT + plotH*(i+0.5)/data.length;
+    const bw = v/max*plotW;
+    ctx.fillStyle=color;
+    roundRectRight(ctx, padL, cy-bh/2, bw, bh, 5);
+    ctx.fillStyle='#374255';
+    ctx.textAlign='right'; ctx.fillText(labels[i], padL-8, cy+4); ctx.textAlign='left';
+    ctx.fillStyle='#64748b'; ctx.fillText('€ '+v.toLocaleString('es-ES'), padL+bw+6, cy+4);
+  });
+}
+function roundRectTop(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x,y+h); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h);
+  ctx.closePath(); ctx.fill();
+}
+function roundRectRight(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x,y+h);
+  ctx.closePath(); ctx.fill();
+}
+window.addEventListener('resize', ()=>{ if(currentSection==='dashboard') wireDashboard(); });
+
+/* ---------------- boot ---------------- */
+renderNav();
+goTo('cotizaciones');
+</script>
+</body>
+</html>
