@@ -54,11 +54,11 @@ body{
   display:flex;flex-direction:column;
   position:sticky;top:0;height:100vh;
 }
-.brand{padding:24px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
-.brand .mark{display:flex;align-items:center;margin-bottom:8px;}
-.brand .mark svg{flex:none;width:168px;height:auto;display:block;}
+.brand{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+.brand .mark{display:flex;align-items:center;gap:10px;}
+.brand .mark svg{flex:0 0 30px;}
 .brand h1{font-size:19px;font-weight:800;letter-spacing:.5px;margin:0;color:#fff;}
-.brand p{margin:0;font-size:12px;color:#9db8d3;letter-spacing:.45px;}
+.brand p{margin:3px 0 0;font-size:11px;color:#8fa9c4;letter-spacing:.4px;}
 .port-switch{display:flex;gap:6px;margin-top:14px;}
 .port-pill{
   flex:1;text-align:center;padding:6px 4px;border-radius:7px;font-size:11.5px;font-weight:600;
@@ -487,8 +487,107 @@ function renderView(){
 /* ==================================================================
    1. COTIZACIONES
    ================================================================== */
-let cotDraft = {ship:'',eta:'',imo:'',work:[],clientId:'',loa:'',draft:''};
+let cotDraft = {ship:'',eta:'',imo:'',work:[],clientId:'',clientNameManual:'',loa:'',draft:''};
 const WORK_OPTIONS = ['Hull Cleaning','Propeller Polishing','Underwater Inspection (UWILD)','Sea Chest Cleaning','Anode Inspection'];
+
+/* ---------------- Motor de tarifas estándar SCAMP (spot / sin contrato) ----------------
+   Fuente: tarifario entregado por Julio (bandas por LOA, GBP, AGW = "All Going Well").
+   Servicios sin tarifa estándar definida (ej. Hull Cleaning individual) quedan
+   marcados como "A confirmar" — no se inventa un precio. */
+const STANDARD_RATES = {
+  bands: [
+    {maxLoa:100, label:'Hasta 100 m'},
+    {maxLoa:180, label:'101–180 m'},
+    {maxLoa:240, label:'181–240 m'},
+    {maxLoa:Infinity, label:'241+ m'},
+  ],
+  inspectionRatePerHour: 1500, // £/h, equipo completo de buzos, presencia de clase, berth-to-berth
+  inspectionHours: [4,5,6,7],
+  propellerOnly: [2000,2500,2750,3000],
+  propellerOnlyHours: ['3 h AGW','4 h AGW','4 h AGW','5 h AGW'],
+  hullAndPropeller: [9000,10500,12500,15000],
+  hullAndPropellerHours: ['6-8 h AGW','7-9 h AGW','8-10 h AGW','10-12 h AGW'],
+  hullOnly: [null,null,null,null], // sin definir por el cliente — editable desde el mantenedor de tarifas
+  draftSurchargeThreshold: 10, // metros
+  draftSurchargePct: 0.25,
+};
+
+function parseLoaNum(str){ const n = parseFloat(String(str||'').replace(',','.')); return isNaN(n) ? null : n; }
+function parseMaxDraft(str){
+  const nums = String(str||'').match(/\d+(?:[.,]\d+)?/g);
+  if(!nums) return null;
+  const vals = nums.map(n=>parseFloat(n.replace(',','.'))).filter(n=>!isNaN(n));
+  return vals.length ? Math.max(...vals) : null;
+}
+function bandIdx(loaNum){
+  if(loaNum==null) return null;
+  return STANDARD_RATES.bands.findIndex(b=>loaNum<=b.maxLoa);
+}
+
+/* Calcula tarifa estándar para una lista de servicios. Detecta combo
+   Hull Cleaning + Propeller Polishing (precio conjunto, más barato que la suma). */
+function calcStandardRate(workList, loaStr, draftStr){
+  const loa = parseLoaNum(loaStr);
+  const draft = parseMaxDraft(draftStr);
+  const idx = bandIdx(loa);
+  if(idx===null || idx<0){
+    return {ok:false, reason:'Falta el LOA del buque para determinar la banda de tarifa.', lines:[], unpriced:[]};
+  }
+  const band = STANDARD_RATES.bands[idx];
+  const surcharge = (draft!=null && draft>STANDARD_RATES.draftSurchargeThreshold) ? STANDARD_RATES.draftSurchargePct : 0;
+  const hasHull = workList.includes('Hull Cleaning');
+  const hasProp = workList.includes('Propeller Polishing');
+  const hasInsp = workList.some(w=>/inspection/i.test(w));
+  const lines=[], unpriced=[];
+
+  if(hasHull && hasProp){
+    const gbp = Math.round(STANDARD_RATES.hullAndPropeller[idx]*(1+surcharge));
+    lines.push({label:'Hull Cleaning + Propeller Polishing (tarifa combo)', gbp, hours:STANDARD_RATES.hullAndPropellerHours[idx]});
+  } else {
+    if(hasProp){
+      const gbp = Math.round(STANDARD_RATES.propellerOnly[idx]*(1+surcharge));
+      lines.push({label:'Propeller Polishing', gbp, hours:STANDARD_RATES.propellerOnlyHours[idx]});
+    }
+    if(hasHull){
+      const hullOnlyPrice = STANDARD_RATES.hullOnly[idx];
+      if(hullOnlyPrice!=null){
+        const gbp = Math.round(hullOnlyPrice*(1+surcharge));
+        lines.push({label:'Hull Cleaning', gbp, hours:'—'});
+      } else {
+        unpriced.push('Hull Cleaning (individual) — sin tarifa estándar definida, cotizar manualmente');
+      }
+    }
+  }
+  if(hasInsp){
+    const hrs = STANDARD_RATES.inspectionHours[idx];
+    const gbp = Math.round(STANDARD_RATES.inspectionRatePerHour*hrs*(1+surcharge));
+    lines.push({label:'Underwater Inspection — £1.500/h × '+hrs+'h AGW', gbp, hours:hrs+' h AGW'});
+  }
+  workList.filter(w=>w!=='Hull Cleaning' && w!=='Propeller Polishing' && !/inspection/i.test(w))
+    .forEach(w=>unpriced.push(w+' — sin tarifa estándar definida, cotizar manualmente'));
+
+  return {ok:true, band:band.label, loa, draft, surcharge, lines, unpriced};
+}
+
+function calcularTarifaPreview(){
+  const loa = document.getElementById('f-loa').value;
+  const draft = document.getElementById('f-draft').value;
+  const work = Array.from(document.querySelectorAll('.f-work:checked')).map(i=>i.value);
+  const box = document.getElementById('rate-calc-result');
+  if(!work.length){ box.innerHTML = `<div class="empty" style="padding:14px;">Selecciona al menos un servicio.</div>`; return; }
+  const r = calcStandardRate(work, loa, draft);
+  if(!r.ok){ box.innerHTML = `<div class="empty" style="padding:14px;">${r.reason}</div>`; return; }
+  const total = r.lines.reduce((s,l)=>s+l.gbp,0);
+  box.innerHTML = `
+    <div style="font-size:11px;color:var(--ink-500);text-transform:uppercase;letter-spacing:.3px;font-weight:700;margin-bottom:6px;">Banda LOA: ${r.band}${r.surcharge?' · recargo draft +25% (draft > 10 m)':''}</div>
+    ${r.lines.map(l=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px;">
+      <span>${l.label} <span class="muted">(${l.hours})</span></span><span class="mono" style="font-weight:700;">£ ${l.gbp.toLocaleString('en-GB')}</span>
+    </div>`).join('')}
+    ${r.unpriced.map(u=>`<div class="small" style="color:var(--amber-600);padding:5px 0;">⚠ ${u}</div>`).join('')}
+    ${r.lines.length?`<div style="display:flex;justify-content:space-between;padding-top:8px;font-weight:800;"><span>Total estimado</span><span class="mono">£ ${total.toLocaleString('en-GB')}</span></div>`:''}
+    <div class="small muted" style="margin-top:6px;">Tarifa estándar SCAMP (spot, sin contrato). Los clientes con tarifa acordada usan su propio tarifario al preparar la oferta.</div>
+  `;
+}
 
 function cotCurrentStep(){
   if(!cotDraft.ship) return 1;
@@ -520,44 +619,58 @@ function viewCotizaciones(){
   <div class="grid2" style="align-items:start;">
     <div class="card" style="padding:22px 24px;">
       <div class="section-title" style="margin-top:0;">① Lector OCR / entrada de datos</div>
-      <p class="small muted" style="margin-top:-6px;">Pega texto, arrastra un correo o simula una imagen escaneada. El sistema extraerá los campos clave.</p>
+      <p class="small muted" style="margin-top:-6px;">Carga un ejemplo real de petición, o pega tu propio correo/nomination. El sistema extraerá los campos clave.</p>
       <div class="field">
-        <textarea id="ocr-input" rows="7" placeholder="Pega aquí el email, nomination o texto OCR...">Dear Sirs,
-
-Please find nomination for M/V MERIDIAN TRADER, IMO 9377512, ETA Algeciras 16-07-2026.
-LOA 199m / Draft 12.0m. Kindly quote for hull cleaning at anchorage.
-Client: Meridian Bulk Carriers.
-
-Best regards,
-Agency Ops</textarea>
+        <label class="field-label">Cargar ejemplo de petición</label>
+        <select id="ocr-example-select" onchange="loadOcrExample(this.value)">
+          <option value="">— Pegar manualmente —</option>
+          <option value="1">Ejemplo 1 · Hull cleaning + Propeller polishing (Gibraltar anchorage)</option>
+          <option value="2">Ejemplo 2 · Propeller polishing (Johnson Q)</option>
+          <option value="3">Ejemplo 3 · Propeller inspection (Magic Q)</option>
+        </select>
+      </div>
+      <div class="field">
+        <textarea id="ocr-input" rows="9" placeholder="Pega aquí el email, nomination o texto OCR..."></textarea>
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-primary" onclick="runOCR()">Analizar OCR</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('ocr-input').value=''">Limpiar</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('ocr-input').value='';document.getElementById('ocr-example-select').value='';">Limpiar</button>
       </div>
 
       <div class="section-title">② Datos extraídos (editable) ${auto}</div>
       <div class="grid2 field-auto">
         <div class="field"><label class="field-label">Barco</label><input id="f-ship" type="text" value="${cotDraft.ship}"></div>
-        <div class="field"><label class="field-label">Cliente</label>
-          <select id="f-client">
-            <option value="">— seleccionar —</option>
+        <div class="field"><label class="field-label">Cliente (catálogo)</label>
+          <select id="f-client" onchange="document.getElementById('spot-client-fields').style.display = this.value ? 'none':'block';">
+            <option value="">— Spot / sin contrato —</option>
             ${CLIENTES.map(c=>`<option value="${c.id}" ${cotDraft.clientId===c.id?'selected':''}>${c.name}</option>`).join('')}
           </select>
         </div>
         <div class="field"><label class="field-label">ETA</label><input id="f-eta" type="date" value="${cotDraft.eta}"></div>
         <div class="field"><label class="field-label">IMO Number</label><input id="f-imo" type="text" value="${cotDraft.imo}"></div>
-        <div class="field"><label class="field-label">LoA (m)</label><input id="f-loa" type="text" value="${cotDraft.loa}"></div>
-        <div class="field"><label class="field-label">Draft (m)</label><input id="f-draft" type="text" value="${cotDraft.draft}"></div>
+        <div class="field"><label class="field-label">LoA (m)</label><input id="f-loa" type="text" value="${cotDraft.loa}" onchange="calcularTarifaPreview()"></div>
+        <div class="field"><label class="field-label">Draft (m)</label><input id="f-draft" type="text" value="${cotDraft.draft}" onchange="calcularTarifaPreview()"></div>
+        <div class="field" style="grid-column:1/-1;${cotDraft.clientId?'display:none;':''}" id="spot-client-fields">
+          <label class="field-label">Cliente / armador (si no está en catálogo)</label>
+          <input id="f-client-manual" type="text" value="${cotDraft.clientNameManual||''}" placeholder="Ej: Meridian Bulk Carriers">
+        </div>
       </div>
       <div class="field">
         <label class="field-label">Trabajo a realizar</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;">
           ${WORK_OPTIONS.map(w=>`<label style="display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:12.5px;cursor:pointer;">
-            <input type="checkbox" class="f-work" value="${w}" ${cotDraft.work.includes(w)?'checked':''} style="width:auto;"> ${w}
+            <input type="checkbox" class="f-work" value="${w}" ${cotDraft.work.includes(w)?'checked':''} style="width:auto;" onchange="calcularTarifaPreview()"> ${w}
           </label>`).join('')}
         </div>
       </div>
+
+      <div class="section-title">Tarifa estándar SCAMP <span class="small muted" style="font-weight:500;text-transform:none;">(cotización spot, según LOA y draft)</span></div>
+      <div class="card" id="rate-calc-result" style="padding:12px 14px;background:var(--bg);border-style:dashed;">
+        <div class="empty" style="padding:10px 0;">Completa LOA, draft y servicios, luego pulsa "Calcular tarifa".</div>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:8px;" onclick="calcularTarifaPreview()">Calcular tarifa estándar</button>
+
+      <div class="section-title"></div>
       <button class="btn btn-blue" onclick="prepararOferta()">Preparar oferta →</button>
     </div>
 
@@ -567,24 +680,73 @@ Agency Ops</textarea>
   </div>`;
 }
 
+const OCR_EXAMPLES = {
+  1: `We are planning to complete hull cleaning and propeller polishing at Gibraltar anchorage during bunker supply operation.
+Arrival draft 4,9-7,2 mtrs.
+
+MV XXXX
+++++
+Vessel Details
+63,541 dwat on 13.300 m ssw, tpc 62,3
+blt chengxi shipyard, 2016
+liberia flag, crs class
+loa: 199.90 mtrs & beam: 32.25 mtrs
+5/5 ho/ha
+grt/nrt: 36,332 / 21,629
+grn/bale 78750.75 / abt. 73680 cbm
+4 x 30 mts cranes , 4 x 12 cbm grabs
+ada
+++++
+
+Pls advise estimated time of work.
+Pls advise cost(lumpsum) and availability.(no need to inspection)
+Vessel will be ballast condition`,
+  2: `We would like to carry out Propeller polishing in our good vessel Johnson Q, ETA Gibraltar on August 10th, please revert with your best quotation vessel details as follows:
+
+Vessel Details
+DWT 86790
+Loa 222
+GT 45900
+Arriba draft 12 mts even level
+Please Also revert with Hull cleaning and propeller polishing`,
+  3: `We would like to carry out Propeller inspection our good vessel Magic Q, ETA Gibraltar on August 10th, please revert with your best quotation vessel details as follows:
+
+Vessel Details
+DWT 16790
+Loa 129
+GT 11900
+Arriba draft Aft 8mts Fwd 9,2mts`
+};
+function loadOcrExample(key){
+  const ta = document.getElementById('ocr-input');
+  if(!key){ return; }
+  ta.value = OCR_EXAMPLES[key];
+  toast('Ejemplo '+key+' cargado — pulsa "Analizar OCR" para extraer los datos');
+}
+
 function runOCR(){
   const text = document.getElementById('ocr-input').value;
-  const shipM = text.match(/M\/V\s+([A-Z0-9 ]+?)(?:,|\.|\n)/i) || text.match(/(?:vessel|buque|barco)[:\s]+([A-Za-z0-9 ]+)/i);
+  const shipM = text.match(/M\/V\s+([A-Z0-9 ]+?)(?:,|\.|\n)/i)
+    || text.match(/\bMV\s+([A-Z0-9]+)/)
+    || text.match(/(?:vessel|buque|barco)[:\s]+([A-Za-z0-9 ]+?)(?:,|\.|\n|$)/i);
   const imoM = text.match(/IMO\s*[:\-]?\s*(\d{7})/i);
   const etaM = text.match(/(\d{2})[-\/](\d{2})[-\/](\d{4})/) || text.match(/(\d{4})-(\d{2})-(\d{2})/);
-  const loaM = text.match(/LOA\s*[:\-]?\s*(\d+(?:\.\d+)?)/i);
-  const draftM = text.match(/Draft\s*[:\-]?\s*(\d+(?:\.\d+)?)/i);
+  const loaM = text.match(/loa\s*[:\-]?\s*(\d+(?:\.\d+)?)/i);
+  const draftM = text.match(/(?:arrival |arriba )?draft[:\s]+([^\n]+?)(?:\n|$)/i);
   let clientId='';
   CLIENTES.forEach(c=>{ if(text.toLowerCase().includes(c.name.split(' ')[0].toLowerCase())) clientId=c.id; });
+  const clientManualM = text.match(/client[:\s]+([A-Za-z0-9 .&]+?)(?:\.|,|\n|$)/i);
   let eta='';
   if(etaM){
     if(etaM[3] && etaM[3].length===4) eta = `${etaM[3]}-${etaM[2]}-${etaM[1]}`;
     else eta = `${etaM[1]}-${etaM[2]}-${etaM[3]}`;
   }
   const work=[];
-  if(/hull/i.test(text)) work.push('Hull Cleaning');
-  if(/propeller|hélice/i.test(text)) work.push('Propeller Polishing');
-  if(/inspection|uwild/i.test(text)) work.push('Underwater Inspection (UWILD)');
+  if(/hull\s*clean/i.test(text)) work.push('Hull Cleaning');
+  if(/propeller\s*polish/i.test(text)) work.push('Propeller Polishing');
+  const inspMentioned = /propeller\s*inspection|underwater\s*inspection|hull\s*inspection|\buwild\b/i.test(text);
+  const inspNegated = /no need.{0,40}inspection|without inspection|no inspection required/i.test(text);
+  if(inspMentioned && !inspNegated) work.push('Underwater Inspection (UWILD)');
 
   cotDraft = {
     ship: shipM ? shipM[1].trim() : cotDraft.ship,
@@ -592,16 +754,19 @@ function runOCR(){
     imo: imoM ? imoM[1] : cotDraft.imo,
     work: work.length ? work : cotDraft.work,
     clientId: clientId || cotDraft.clientId,
+    clientNameManual: (!clientId && clientManualM) ? clientManualM[1].trim() : cotDraft.clientNameManual,
     loa: loaM ? loaM[1] : cotDraft.loa,
-    draft: draftM ? draftM[1] : cotDraft.draft,
+    draft: draftM ? draftM[1].trim() : cotDraft.draft,
   };
   renderView();
   toast('OCR analizado — revisa y completa los campos que falten');
+  calcularTarifaPreview();
 }
 
 function collectDraftFromForm(){
   cotDraft.ship = document.getElementById('f-ship').value;
   cotDraft.clientId = document.getElementById('f-client').value;
+  cotDraft.clientNameManual = document.getElementById('f-client-manual') ? document.getElementById('f-client-manual').value : (cotDraft.clientNameManual||'');
   cotDraft.eta = document.getElementById('f-eta').value;
   cotDraft.imo = document.getElementById('f-imo').value;
   cotDraft.loa = document.getElementById('f-loa').value;
@@ -618,8 +783,9 @@ function renderOfferColumn(){
       <div class="empty">Completa los datos y pulsa <b>Preparar oferta</b> para generar el documento.</div>`;
   }
   const c = clientById(cotDraft.clientId);
+  const displayName = c ? c.name : (cotDraft.clientNameManual || 'Cliente spot');
   return `
-    <div class="section-title" style="margin-top:0;">③ Oferta en formato cliente <span class="count">· ${c?c.name:''}</span></div>
+    <div class="section-title" style="margin-top:0;">③ Oferta en formato cliente <span class="count">· ${displayName}</span></div>
     <textarea id="offer-text" rows="13" style="font-family:var(--mono);font-size:12px;">${offerState.text}</textarea>
     <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
       <button class="btn btn-ghost" onclick="descargarOfertaPDF()">⬇ Descargar PDF</button>
@@ -637,14 +803,36 @@ function renderOfferColumn(){
 
 function prepararOferta(){
   collectDraftFromForm();
-  if(!cotDraft.ship || !cotDraft.clientId){
-    toast('Falta Barco o Cliente — complétalos antes de preparar la oferta'); return;
+  if(!cotDraft.ship || !cotDraft.work.length){
+    toast('Falta Barco o servicios a cotizar — complétalos antes de preparar la oferta'); return;
   }
-  const c = clientById(cotDraft.clientId);
-  const lines = cotDraft.work.map(w=>{
-    const r = c.rates.find(r=>r.concepto.toLowerCase().includes(w.split(' ')[0].toLowerCase()));
-    return ` - ${w}${r ? '  ...........  '+r.precio : ''}`;
-  }).join('\n');
+  const catalogClient = cotDraft.clientId ? clientById(cotDraft.clientId) : null;
+  const clientName = catalogClient ? catalogClient.name : (cotDraft.clientNameManual || 'Cliente (cotización spot)');
+  const clientEmail = catalogClient ? catalogClient.email : '—';
+  const clientCredit = catalogClient ? catalogClient.credit : 'Condiciones estándar SCAMP — a confirmar con el cliente';
+  const clientNotes = catalogClient ? catalogClient.notes : 'Cotización spot, sin contrato previo. Tarifas según tarifario estándar SCAMP vigente.';
+
+  let lines, rateNote='';
+  if(catalogClient){
+    // Cliente con contrato — usa su propio tarifario; si falta un ítem, cae a tarifa estándar individual.
+    lines = cotDraft.work.map(w=>{
+      const r = catalogClient.rates.find(r=>r.concepto.toLowerCase().includes(w.split(' ')[0].toLowerCase()));
+      if(r) return ` - ${w}  ...........  ${r.precio}`;
+      const std = calcStandardRate([w], cotDraft.loa, cotDraft.draft);
+      const line = std.ok && std.lines.length ? `£ ${std.lines[0].gbp.toLocaleString('en-GB')} (tarifa estándar SCAMP)` : 'A confirmar';
+      return ` - ${w}  ...........  ${line}`;
+    }).join('\n');
+  } else {
+    // Cotización spot — motor de tarifas estándar por banda de LOA (con combo si aplica).
+    const std = calcStandardRate(cotDraft.work, cotDraft.loa, cotDraft.draft);
+    const priced = std.lines.map(l=>` - ${l.label}  ...........  £ ${l.gbp.toLocaleString('en-GB')}  (${l.hours})`);
+    const unpriced = std.unpriced.map(u=>` - ${u}`);
+    lines = [...priced, ...unpriced].join('\n');
+    if(std.surcharge) rateNote = `\nIncluye recargo del 25% por draft superior a 10 m.`;
+    else if(!std.ok) rateNote = `\n${std.reason}`;
+  }
+
+  const c = {name:clientName, email:clientEmail, credit:clientCredit, notes:clientNotes};
   const text =
 `SCAMP · Ship Care and Maintenance
 Puerto de Algeciras (ESALG)
@@ -655,9 +843,9 @@ Buque: ${cotDraft.ship}   IMO: ${cotDraft.imo || '—'}
 ETA: ${cotDraft.eta || '—'}   LOA: ${cotDraft.loa||'—'} m   Draft: ${cotDraft.draft||'—'} m
 
 Servicios cotizados:
-${lines || ' - (seleccionar trabajo)'}
+${lines || ' - (seleccionar trabajo)'}${rateNote}
 
-Condiciones: ${c.credit}. Tarifas según acuerdo vigente con ${c.name}.
+Condiciones: ${c.credit}. ${catalogClient ? 'Tarifas según acuerdo vigente con '+c.name+'.' : ''}
 ${c.notes}
 
 Quedamos a la espera de su confirmación para proceder con la nominación.
@@ -666,7 +854,7 @@ SCAMP Operations Team — Algeciras`;
 
   offerState = {
     text,
-    emailTo: c.email,
+    emailTo: catalogClient ? catalogClient.email : '',
     emailSubject: `SCAMP Quote — ${cotDraft.ship} — Algeciras`,
     emailBody: `Dear ${c.name} team,\n\nPlease find attached our quotation for the underwater services requested for M/V ${cotDraft.ship} (ETA ${cotDraft.eta||'TBC'}).\n\nKindly confirm at your earliest convenience so we can proceed with nomination.\n\nBest regards,\nSCAMP Operations — Algeciras`,
     pdfReady: false,
@@ -679,6 +867,7 @@ SCAMP Operations Team — Algeciras`;
 function descargarOfertaPDF(){
   if(!offerState) return;
   const c = clientById(cotDraft.clientId);
+  const displayName = c ? c.name : (cotDraft.clientNameManual || 'Cliente spot');
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'pt', format:'a4' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -713,7 +902,7 @@ function descargarOfertaPDF(){
     doc.text(String(value||'—'), marginL + 110, y);
     y += 18;
   };
-  field('Cliente', c ? c.name : '—');
+  field('Cliente', displayName);
   field('Buque', cotDraft.ship);
   field('IMO', cotDraft.imo);
   field('ETA', cotDraft.eta);
@@ -725,21 +914,39 @@ function descargarOfertaPDF(){
   doc.setDrawColor(226,232,240); doc.line(marginL, y-10, pageW-marginL, y-10);
 
   doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
-  const rates = c ? c.rates : [];
-  cotDraft.work.forEach(w=>{
-    const r = rates.find(r=>r.concepto.toLowerCase().includes(w.split(' ')[0].toLowerCase()));
-    doc.setTextColor(16,24,39);
-    doc.text(`•  ${w}`, marginL+6, y);
-    doc.setTextColor(0,129,158);
-    doc.text(r ? r.precio : 'A confirmar', pageW-marginL, y, {align:'right'});
-    y += 18;
-  });
+  if(c){
+    // Cliente con contrato — tarifario propio, con fallback a tarifa estándar individual.
+    cotDraft.work.forEach(w=>{
+      const r = c.rates.find(r=>r.concepto.toLowerCase().includes(w.split(' ')[0].toLowerCase()));
+      let priceTxt = 'A confirmar';
+      if(r) priceTxt = r.precio;
+      else { const std = calcStandardRate([w], cotDraft.loa, cotDraft.draft); if(std.ok && std.lines.length) priceTxt = '£ '+std.lines[0].gbp.toLocaleString('en-GB'); }
+      doc.setTextColor(16,24,39); doc.text(`•  ${w}`, marginL+6, y);
+      doc.setTextColor(0,129,158); doc.text(priceTxt, pageW-marginL, y, {align:'right'});
+      y += 18;
+    });
+  } else {
+    // Cotización spot — motor de tarifas estándar (con combo Hull+Propeller si aplica).
+    const std = calcStandardRate(cotDraft.work, cotDraft.loa, cotDraft.draft);
+    std.lines.forEach(l=>{
+      doc.setTextColor(16,24,39); doc.text(`•  ${l.label}`, marginL+6, y);
+      doc.setTextColor(0,129,158); doc.text(`£ ${l.gbp.toLocaleString('en-GB')}`, pageW-marginL, y, {align:'right'});
+      y += 18;
+      doc.setTextColor(148,163,184); doc.setFontSize(8.5); doc.text(l.hours, marginL+6, y); doc.setFontSize(10.5); y += 12;
+    });
+    std.unpriced.forEach(u=>{
+      doc.setTextColor(16,24,39); doc.text(`•  ${u}`, marginL+6, y);
+      doc.setTextColor(192,122,18); doc.text('A confirmar', pageW-marginL, y, {align:'right'});
+      y += 18;
+    });
+    if(std.surcharge){ doc.setTextColor(192,57,43); doc.setFontSize(9); doc.text('Incluye recargo del 25% por draft superior a 10 m.', marginL+6, y); doc.setFontSize(10.5); y += 16; }
+  }
 
   y += 10;
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(100,116,139);
   doc.text('CONDICIONES', marginL, y); y += 14;
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(55,66,85);
-  const condLines = doc.splitTextToSize(`${c ? c.credit : '—'}. Tarifas según acuerdo vigente con ${c ? c.name : 'el cliente'}. ${c ? c.notes : ''}`, pageW - marginL*2);
+  const condLines = doc.splitTextToSize(`${c ? c.credit : 'Condiciones estándar SCAMP — a confirmar con el cliente'}. ${c ? 'Tarifas según acuerdo vigente con '+c.name+'.' : 'Cotización spot, sin contrato previo.'} ${c ? c.notes : ''}`, pageW - marginL*2);
   doc.text(condLines, marginL, y); y += condLines.length*13 + 16;
 
   doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(100,116,139);
@@ -777,7 +984,7 @@ function enviarOferta(){
   EXPEDIENTES.unshift(exp);
 
   toast(`Oferta enviada a ${to}${offerState.pdfReady?' con PDF adjunto':''} — Expediente ${id} creado en Pizarra de servicios (Cotizado)`);
-  offerState=null; cotDraft={ship:'',eta:'',imo:'',work:[],clientId:'',loa:'',draft:''};
+  offerState=null; cotDraft={ship:'',eta:'',imo:'',work:[],clientId:'',clientNameManual:'',loa:'',draft:''};
   renderView();
 }
 
@@ -1244,6 +1451,7 @@ function viewEntidades(){
     <div class="tabbtn ${entTab==='clientes'?'active':''}" onclick="setEntTab('clientes')">Clientes</div>
     <div class="tabbtn ${entTab==='agentes'?'active':''}" onclick="setEntTab('agentes')">Agentes</div>
     <div class="tabbtn ${entTab==='portuarias'?'active':''}" onclick="setEntTab('portuarias')">Entidades portuarias</div>
+    <div class="tabbtn ${entTab==='tarifario'?'active':''}" onclick="setEntTab('tarifario')">Tarifario SCAMP</div>
   </div>
   <div id="ent-body">${renderEntBody()}</div>`;
 }
@@ -1254,6 +1462,81 @@ function renderEntBody(){
   if(entTab==='clientes') return renderClientesTab();
   if(entTab==='agentes') return renderSimpleEntity(AGENTES,'Agentes consignatarios de Algeciras. Usados para automatizar el envío de mensajes en el flujo operativo.');
   if(entTab==='portuarias') return renderSimpleEntity(PORTUARIAS,'Autoridad Portuaria y Capitanía Marítima — contactos usados en notificaciones automáticas.');
+  if(entTab==='tarifario') return renderTarifarioTab();
+}
+
+function renderTarifarioTab(){
+  const R = STANDARD_RATES;
+  const rowLabel = (i)=>R.bands[i].label;
+  return `
+  <div class="card" style="padding:20px;">
+    <div class="section-title" style="margin-top:0;">Matriz de tarifas estándar — por servicio y tamaño de buque (LOA)</div>
+    <p class="small muted" style="margin-top:-6px;">Esta es la tarifa que usa el motor de cotizaciones spot (sin contrato) en la pantalla Cotizaciones. Los clientes con tarifa acordada siguen usando su propio tarifario, definido en la pestaña "Clientes".</p>
+
+    <div style="overflow-x:auto;">
+    <table class="data" id="tarifario-table">
+      <thead><tr>
+        <th>Banda LOA</th>
+        <th>Propeller Polishing<br><span class="small muted" style="font-weight:400;">GBP flat</span></th>
+        <th>Horas AGW</th>
+        <th>Hull Cleaning + Propeller<br><span class="small muted" style="font-weight:400;">GBP flat (combo)</span></th>
+        <th>Horas AGW</th>
+        <th>Hull Cleaning solo<br><span class="small muted" style="font-weight:400;">GBP flat (opcional)</span></th>
+        <th>Horas inspección<br><span class="small muted" style="font-weight:400;">× tarifa/hora</span></th>
+      </tr></thead>
+      <tbody>
+        ${R.bands.map((b,i)=>`
+          <tr>
+            <td><b>${rowLabel(i)}</b></td>
+            <td><input type="text" id="tf-prop-${i}" value="${R.propellerOnly[i]}" style="width:90px;"></td>
+            <td><input type="text" id="tf-prop-h-${i}" value="${R.propellerOnlyHours[i]}" style="width:110px;"></td>
+            <td><input type="text" id="tf-combo-${i}" value="${R.hullAndPropeller[i]}" style="width:90px;"></td>
+            <td><input type="text" id="tf-combo-h-${i}" value="${R.hullAndPropellerHours[i]}" style="width:110px;"></td>
+            <td><input type="text" id="tf-hull-${i}" value="${R.hullOnly[i]==null?'':R.hullOnly[i]}" placeholder="Sin definir" style="width:90px;"></td>
+            <td><input type="text" id="tf-insp-h-${i}" value="${R.inspectionHours[i]}" style="width:70px;"></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+
+    <div class="grid2" style="margin-top:20px;max-width:640px;">
+      <div class="field"><label class="field-label">Tarifa base inspección (£/h)</label><input type="text" id="tf-insp-rate" value="${R.inspectionRatePerHour}"></div>
+      <div class="field"><label class="field-label">Umbral recargo por draft (m)</label><input type="text" id="tf-draft-threshold" value="${R.draftSurchargeThreshold}"></div>
+      <div class="field"><label class="field-label">Recargo por draft (%)</label><input type="text" id="tf-draft-pct" value="${Math.round(R.draftSurchargePct*100)}"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-top:18px;">
+      <button class="btn btn-primary" onclick="guardarTarifario()">Guardar tarifario</button>
+      <span id="tarifario-saved-flag" class="small" style="color:var(--green-600);font-weight:700;display:none;">✓ Tarifario actualizado</span>
+    </div>
+    <p class="small muted" style="margin-top:14px;">Nota: "Hull Cleaning solo" no tiene tarifa base definida por el cliente todavía. Si se completa aquí, el motor de cotizaciones dejará de marcarlo como "A confirmar" y usará este valor.</p>
+  </div>`;
+}
+
+function guardarTarifario(){
+  const R = STANDARD_RATES;
+  R.bands.forEach((b,i)=>{
+    const prop = parseFloat(document.getElementById(`tf-prop-${i}`).value.replace(',','.'));
+    const combo = parseFloat(document.getElementById(`tf-combo-${i}`).value.replace(',','.'));
+    const hullVal = document.getElementById(`tf-hull-${i}`).value.trim();
+    const inspH = parseFloat(document.getElementById(`tf-insp-h-${i}`).value.replace(',','.'));
+    if(!isNaN(prop)) R.propellerOnly[i] = prop;
+    if(!isNaN(combo)) R.hullAndPropeller[i] = combo;
+    R.propellerOnlyHours[i] = document.getElementById(`tf-prop-h-${i}`).value;
+    R.hullAndPropellerHours[i] = document.getElementById(`tf-combo-h-${i}`).value;
+    R.hullOnly[i] = hullVal==='' ? null : parseFloat(hullVal.replace(',','.'));
+    if(!isNaN(inspH)) R.inspectionHours[i] = inspH;
+  });
+  const rate = parseFloat(document.getElementById('tf-insp-rate').value.replace(',','.'));
+  const thr = parseFloat(document.getElementById('tf-draft-threshold').value.replace(',','.'));
+  const pct = parseFloat(document.getElementById('tf-draft-pct').value.replace(',','.'));
+  if(!isNaN(rate)) R.inspectionRatePerHour = rate;
+  if(!isNaN(thr)) R.draftSurchargeThreshold = thr;
+  if(!isNaN(pct)) R.draftSurchargePct = pct/100;
+
+  toast('Tarifario SCAMP actualizado — se aplicará en la próxima cotización spot');
+  const flag = document.getElementById('tarifario-saved-flag');
+  if(flag){ flag.style.display='inline'; setTimeout(()=>flag.style.display='none', 2500); }
 }
 
 function renderClientesTab(){
